@@ -1,937 +1,219 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recepția Digitală — C.N. „Tudor Vladimirescu" București</title>
-<style>
-  /* ============================================================
-     Recepția Digitală — kiosk interactiv pentru holul liceului
-     Culori: schimbă-le în :root
-     ============================================================ */
-  :root {
-    --bg: #0a0e1f;
-    --panou: #141b36;
-    --panou2: #1a2348;
-    --text: #eef1ff;
-    --gri: #8b93b8;
-    --accent: #22d3a5;
-    --accent2: #7c6cff;
-    --rau: #ff5470;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kiosk Liceu - Site-ul care te vede</title>
 
-  * { box-sizing: border-box; }
+  <!-- MediaPipe / Canvas Tools -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
-  html, body { height: 100%; }
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --glass-bg: rgba(255, 255, 255, 0.07);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --accent: #38bdf8;
+      --accent-hover: #818cf8;
+      --text: #f8fafc;
+    }
 
-  body {
-    margin: 0; overflow: hidden;
-    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: radial-gradient(1400px 700px at 70% -10%, #1b2450 0%, var(--bg) 60%) fixed, var(--bg);
-    color: var(--text);
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: manipulation;
-  }
-  body.mana { cursor: none; } /* în modul mână ascundem cursorul de mouse */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: var(--bg-gradient); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
-  /* ---------- Ecrane (unul vizibil pe rând) ---------- */
-  .ecran {
-    position: fixed; inset: 0; display: none;
-    flex-direction: column; align-items: center; justify-content: center;
-    padding: 24px; overflow: hidden; z-index: 1;
-  }
-  .ecran.activ { display: flex; }
+    /* Layout Responsive (Adaptive pentru Laptop & Proiector vs Mobil) */
+    header { text-align: center; padding: 1.5rem; background: rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
+    header h1 { font-size: 2rem; color: var(--accent); letter-spacing: 1px; }
 
-  /* ---------- ECRANUL DE AȘTEPTARE (idle) ---------- */
-  #ecran-idle { justify-content: space-between; padding: 48px 24px 40px; }
-  .idle-sus { text-align: center; }
-  .ceas-ora { font-size: clamp(56px, 9vw, 96px); font-weight: 700; letter-spacing: 2px;
-    font-variant-numeric: tabular-nums; }
-  .ceas-data { color: var(--gri); font-size: clamp(15px, 2vw, 20px); text-transform: capitalize; }
-  .idle-titlu { font-size: clamp(20px, 3vw, 34px); margin: 26px 0 6px; font-weight: 600; }
-  .idle-sub { color: var(--gri); margin: 0; font-size: clamp(13px, 1.6vw, 16px); }
+    .main-container {
+      display: flex;
+      flex-direction: row;
+      flex: 1;
+      padding: 1.5rem;
+      gap: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
 
-  #carusel { width: 100%; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-  #carusel-pista { display: flex; gap: 18px; width: max-content; will-change: transform; }
-  .card-carusel {
-    width: 280px; padding: 18px 20px; border-radius: 16px;
-    background: var(--panou); border: 1px solid rgba(255,255,255,.08);
-    display: flex; align-items: center; gap: 14px;
-  }
-  .card-carusel .icon { font-size: 34px; }
-  .card-carusel b { display: block; font-size: 16px; margin-bottom: 3px; }
-  .card-carusel span { color: var(--gri); font-size: 13px; }
+    /* Mod mobil: aranjare pe verticală */
+    @media (max-width: 850px) {
+      .main-container { flex-direction: column; }
+    }
 
-  .idle-hint { text-align: center; line-height: 1.9; }
-  .idle-hint .pulset {
-    display: inline-block; padding: 12px 26px; border-radius: 999px;
-    background: rgba(34,211,165,.12); border: 1px solid rgba(34,211,165,.45);
-    font-size: clamp(16px, 2.2vw, 22px);
-    animation: pulsare 2s ease-in-out infinite;
-  }
-  @keyframes pulsare { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.04); opacity: .85; } }
-  .idle-hint .mic { display: block; color: var(--gri); font-size: 13px; }
+    /* Panouri Glassmorphism */
+    .panel {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
 
-  /* ---------- ECRANUL DE MENIU ---------- */
-  #ecran-meniu { padding-top: 90px; }
-  #ecran-meniu h2 { font-size: clamp(28px, 4.5vw, 46px); margin: 0 0 4px; }
-  .meniu-sub { color: var(--gri); font-size: clamp(15px, 2vw, 20px); margin: 0 0 30px; }
-  .galerie-meniu {
-    display: grid; grid-template-columns: repeat(3, minmax(220px, 280px)); gap: 16px;
-    max-width: 920px; width: 100%; justify-content: center;
-  }
-  .tigla {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-    padding: 20px 22px; border-radius: 18px; text-align: left; text-decoration: none;
-    background: var(--panou); color: var(--text);
-    border: 1px solid rgba(255,255,255,.09); cursor: pointer;
-    font: inherit; transition: transform .15s, border-color .15s;
-  }
-  .tigla:hover { transform: translateY(-3px); border-color: rgba(34,211,165,.5); }
-  .tigla .icon { font-size: 38px; }
-  .tigla b { font-size: 19px; }
-  .tigla span { color: var(--gri); font-size: 13.5px; }
-  .tigla.tur { background: linear-gradient(135deg, #16224a, #251c56); }
+    .video-panel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+    .content-panel { flex: 1.2; display: flex; flex-direction: column; gap: 1rem; }
 
-  /* starea „țintit de mână” (dwell) — cercul se umple */
-  .plan { outline: 3px solid var(--accent); outline-offset: 3px; box-shadow: 0 0 30px rgba(34,211,165,.35); }
+    /* Container Video + Canvas Cursor */
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      aspect-ratio: 4/3;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid var(--accent);
+    }
+    video { display: none; }
+    canvas { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-  .meniu-hint { color: var(--gri); font-size: 14px; margin-top: 28px; }
+    /* Meniu Navigare */
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+      padding: 1.2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      text-align: center;
+    }
+    .btn:hover, .btn.active {
+      background: var(--accent);
+      color: #000;
+      box-shadow: 0 0 15px var(--accent);
+      transform: translateY(-2px);
+    }
 
-  /* ---------- ECRANUL DE PAGINĂ ---------- */
-  #ecran-pagina { justify-content: flex-start; padding-top: 80px; overflow: hidden; }
-  .pag-corp { width: 100%; max-width: 860px; display: flex; flex-direction: column; min-height: 0; height: 100%; }
-  .pag-antet { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
-  .pag-antet h2 { margin: 0; font-size: clamp(20px, 3vw, 30px); }
-  .pag-continut {
-    background: var(--panou); border: 1px solid rgba(255,255,255,.09); border-radius: 18px;
-    padding: 26px 30px; overflow-y: auto; flex: 1; line-height: 1.65; font-size: 15.5px;
-  }
-  .pag-continut h3 { margin: 4px 0 10px; font-size: 19px; }
-  .pag-continut p { margin: 0 0 12px; }
-  .pag-continut ul { margin: 0 0 12px; padding-left: 22px; }
-  .pag-continut li { margin-bottom: 5px; }
-  .pag-continut table { border-collapse: collapse; width: 100%; margin: 8px 0 14px; font-size: 15px; }
-  .pag-continut th, .pag-continut td { padding: 9px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,.12); }
-  .pag-continut th { color: var(--gri); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; }
-  .pag-continut .numar { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
-  .sursa { color: var(--gri); font-size: 12.5px; margin-top: 16px; }
-  .sursa a { color: #9db1ff; }
+    /* Formular Vizitatori (Sustitut tactil/mouse pentru mediul zgomotos) */
+    .form-group { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+    input {
+      padding: 0.8rem;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 1rem;
+    }
 
-  /* ---------- ECRANUL DE JOC („Prinzătorul de gânduri”) ---------- */
-  #ecran-joc { justify-content: flex-start; padding-top: 74px; }
-  .joc-corp { display: grid; grid-template-columns: 1fr 300px; gap: 18px; width: 100%; max-width: 1100px; flex: 1; min-height: 0; }
-  .joc-antet { display: flex; align-items: center; gap: 18px; width: 100%; max-width: 1100px; margin-bottom: 12px; }
-  .joc-antet h2 { margin: 0; font-size: clamp(18px, 2.6vw, 26px); flex: 1; }
-  .joc-hud { display: flex; gap: 18px; font-size: 15px; color: var(--gri); font-variant-numeric: tabular-nums; }
-  .joc-hud b { color: var(--text); font-size: 17px; }
-  .joc-scena { position: relative; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); }
-  canvas#joc { display: block; width: 100%; height: auto; background: #0d1226; }
-  #joc-overlay {
-    position: absolute; inset: 0; z-index: 3;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-    background: rgba(8,10,22,.66); backdrop-filter: blur(3px); text-align: center; padding: 20px;
-  }
-  #joc-overlay.ascuns { display: none; }
-  #joc-overlay h3 { margin: 0; font-size: 24px; }
-  #joc-overlay p { margin: 0 0 8px; color: var(--gri); font-size: 14px; max-width: 420px; }
-  .buton {
-    padding: 12px 26px; font-size: 16px; font-weight: 700; font-family: inherit;
-    color: #062018; background: linear-gradient(90deg, #22d3a5, #37e0b0);
-    border: none; border-radius: 12px; cursor: pointer;
-    box-shadow: 0 8px 24px rgba(34,211,165,.25); transition: transform .12s;
-  }
-  .buton:hover { transform: translateY(-2px); }
-  .buton-secundar {
-    padding: 9px 16px; border-radius: 10px; font: inherit; font-size: 14px; cursor: pointer;
-    background: var(--panou); color: var(--text); border: 1px solid rgba(255,255,255,.18);
-  }
-  .buton-secundar:hover { border-color: rgba(34,211,165,.5); }
-
-  #bara-laterala { display: flex; flex-direction: column; min-height: 0; }
-  #bara-laterala h3 { margin: 0 0 10px; font-size: 15px; color: var(--gri); text-transform: uppercase; letter-spacing: 1px; }
-  #lista-laterala { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-  .card-mini {
-    display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px;
-    border-radius: 14px; background: var(--panou); color: var(--text);
-    border: 1px solid rgba(255,255,255,.08); cursor: pointer; font: inherit;
-    transition: border-color .3s, transform .3s;
-  }
-  .card-mini .icon { font-size: 26px; }
-  .card-mini b { display: block; font-size: 15px; }
-  .card-mini span { color: var(--gri); font-size: 12.5px; }
-  .card-mini.stralucit { border-color: rgba(124,108,255,.7); transform: translateX(-6px);
-    box-shadow: 0 0 22px rgba(124,108,255,.25); }
-
-  /* ---------- Panoul camerei (prezent pe toate ecranele) ---------- */
-  #panou-camera {
-    position: fixed; top: 14px; right: 14px; z-index: 900; width: 200px;
-    border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,.18);
-    background: rgba(10,14,31,.75); backdrop-filter: blur(6px);
-  }
-  #zona-video { position: relative; height: 150px; }
-  #zona-video video, #zona-video canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  #zona-video video { object-fit: cover; transform: scaleX(-1); }
-  #status-camera { padding: 5px 9px; font-size: 11px; color: #cdd4f5; background: rgba(10,14,31,.7); min-height: 19px; }
-
-  #badge-mod {
-    position: fixed; bottom: 12px; right: 14px; z-index: 900;
-    padding: 5px 12px; border-radius: 999px; font-size: 12.5px;
-    border: 1px solid rgba(34,211,165,.5); color: #9df3dc; background: rgba(10,14,31,.7);
-  }
-  #badge-mod.soricel { border-color: rgba(139,147,184,.5); color: var(--gri); }
-
-  /* ---------- Cursorul mâinii ---------- */
-  #cursor { position: fixed; top: 0; left: 0; width: 56px; height: 56px; z-index: 2000;
-    pointer-events: none; display: none; }
-  body.mana #cursor { display: block; }
-  #cursor-arc { position: absolute; inset: 0; border-radius: 50%;
-    border: 2.5px solid var(--accent); opacity: .85; transition: background .12s; }
-  #cursor.ciupit #cursor-arc { background: rgba(34,211,165,.3); }
-  #cursor-punct { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px;
-    border-radius: 50%; background: #fff; transform: translate(-50%, -50%); }
-
-  #toast {
-    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 20px);
-    opacity: 0; transition: .25s; z-index: 1000; pointer-events: none;
-    background: rgba(20,27,54,.95); border: 1px solid rgba(124,108,255,.5);
-    padding: 10px 20px; border-radius: 999px; font-size: 14.5px;
-  }
-  #toast.vizibil { opacity: 1; transform: translate(-50%, 0); }
-
-  .scuturare { animation: scuturare .35s; }
-  @keyframes scuturare {
-    10%,90% { transform: translateX(-2px); } 20%,80% { transform: translateX(3px); }
-    30%,70% { transform: translateX(-5px); } 40%,60% { transform: translateX(5px); }
-    50% { transform: translateX(-3px); }
-  }
-
-  @media (max-width: 860px) {
-    .galerie-meniu { grid-template-columns: repeat(2, 1fr); }
-    .joc-corp { grid-template-columns: 1fr; overflow-y: auto; }
-    #lista-laterala { flex-direction: row; overflow-x: auto; }
-    .card-mini { min-width: 200px; }
-    #panou-camera { width: 130px; }
-    #zona-video { height: 98px; }
-  }
-</style>
+    .qr-box {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.9rem;
+      border: 1px dashed var(--accent);
+    }
+  </style>
 </head>
 <body>
 
-<!-- ============ PANOU CAMERA (comun) ============ -->
-<div id="panou-camera">
-  <div id="zona-video" style="display:none">
-    <video id="camera" autoplay muted playsinline></video>
-    <canvas id="camera-urmare" width="200" height="150"></canvas>
-  </div>
-  <div id="status-camera">⏳ Pornesc camera…</div>
-</div>
-<div id="badge-mod" class="soricel">🖱️ Șoarece</div>
-
-<!-- ============ CURSORUL MÂNII ============ -->
-<div id="cursor"><div id="cursor-arc"></div><div id="cursor-punct"></div></div>
-
-<!-- ============ ECRAN 1: AȘTEPTARE (idle) ============ -->
-<section id="ecran-idle" class="ecran activ">
-  <div class="idle-sus">
-    <div class="ceas-ora" id="ceas-ora">--:--</div>
-    <div class="ceas-data" id="ceas-data">—</div>
-    <h1 class="idle-titlu">Colegiul Național „Tudor Vladimirescu”</h1>
-    <p class="idle-sub">Bulevardul Iuliu Maniu 15 · Sector 6 · București</p>
-  </div>
-  <div id="carusel"><div id="carusel-pista"></div></div>
-  <div class="idle-hint">
-    <span class="pulset">👋 Ridică mâna spre cameră ca să începem</span>
-    <span class="mic">…sau atinge ecranul / dă click oriunde</span>
-  </div>
-</section>
-
-<!-- ============ ECRAN 2: MENIU (întâmpinare) ============ -->
-<section id="ecran-meniu" class="ecran">
-  <h2>Bun venit! 👋</h2>
-  <p class="meniu-sub">Cu ce te pot ajuta astăzi?</p>
-  <div class="galerie-meniu" id="galerie-meniu"></div>
-  <p class="meniu-hint">👉 arată cu degetul și <b>ciupește</b> (🤏) sau ține degetul <b>1,5 secunde</b> peste o căsuță</p>
-</section>
-
-<!-- ============ ECRAN 3: PAGINĂ DE CONȚINUT ============ -->
-<section id="ecran-pagina" class="ecran">
-  <div class="pag-corp">
-    <header class="pag-antet">
-      <button class="buton-secundar kb" data-kb id="buton-inapoi">← Înapoi la meniu</button>
-      <h2 id="pag-titlu">—</h2>
-    </header>
-    <div class="pag-continut" id="pag-continut"></div>
-  </div>
-</section>
-
-<!-- ============ ECRAN 4: JOCUL „PRINZĂTORUL DE GÂNDURI” + SIDEBAR ============ -->
-<section id="ecran-joc" class="ecran">
-  <header class="joc-antet">
-    <button class="buton-secundar kb" data-kb data-actiune="meniu">← Meniu</button>
-    <h2>🧺 Prinzătorul de gânduri</h2>
-    <div class="joc-hud">
-      <span>Scor <b id="joc-scor">0</b></span>
-      <span>Record <b id="joc-record">0</b></span>
-      <span id="joc-vieti">❤️❤️❤️</span>
-    </div>
+  <header>
+    <h1>KIOSK INTERACTIV LICEU</h1>
+    <p style="opacity: 0.8;">Sistem Inteligente de Recepție & Tur Virtual</p>
   </header>
-  <div class="joc-corp">
-    <div class="joc-scena" id="joc-scena">
-      <canvas id="joc" width="720" height="480"></canvas>
-      <div id="joc-overlay">
-        <h3 id="joc-mesaj-titlu">Nu te-ai hotărât încă? 🤔</h3>
-        <p id="joc-mesaj-text">Distrează-te prinzând gânduri bune 📚💡🧠 și ferește-te de distrageri 📱🎮.
-        Mișcă mâna (sau mouse-ul) ca să miști coșul. La fiecare 10 puncte viteza crește!</p>
-        <button class="buton kb" data-kb id="buton-joc-start">▶ Prinde gânduri &nbsp;<span style="font-weight:400;font-size:12px;opacity:.75">(click sau 🤏)</span></button>
+
+  <div class="main-container">
+    <!-- Panou Detecție Video & Cursor -->
+    <div class="panel video-panel">
+      <h3>Control Gesturi</h3>
+      <p style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 0.8rem;">Arată degetul arătător pentru a controla cursorul</p>
+      
+      <div class="canvas-wrapper">
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="output_canvas"></canvas>
       </div>
     </div>
-    <aside id="bara-laterala">
-      <h3>Descoperă:</h3>
-      <div id="lista-laterala"></div>
-    </aside>
+
+    <!-- Panou Conținut & Formular -->
+    <div class="panel content-panel">
+      <h2>Meniu Principal</h2>
+      
+      <div class="menu-grid">
+        <a href="tur.html" class="btn">🏫 Tur Virtual 360°</a>
+        <a href="../handwave/index.html" class="btn">🎮 Mini-Joc Gesturi</a>
+      </div>
+
+      <hr style="border-color: var(--glass-border); margin: 1rem 0;">
+
+      <h3>📝 Registru Vizitatori / Biblioteca</h3>
+      <form onsubmit="event.preventDefault(); alert('Date înregistrate cu succes!');">
+        <div class="form-group">
+          <label>Nume și Prenume:</label>
+          <input type="text" placeholder="Ex: Popescu Ion" required>
+        </div>
+        <div class="form-group">
+          <label>Contact (Email/Tel):</label>
+          <input type="text" placeholder="Ex: ion@email.com" required>
+        </div>
+        <button type="submit" class="btn" style="margin-top: 1rem; width: 100%;">Trimite Datele</button>
+      </form>
+
+      <div class="qr-box">
+        📲 <strong>Ești pe telefon în clasă?</strong><br>Scanează codul QR de pe ecran pentru a completa formularul fără zgomot de fundal!
+      </div>
+    </div>
   </div>
-</section>
 
-<div id="toast"></div>
+  <script>
+    const videoElement = document.getElementById('webcam');
+    const canvasElement = document.getElementById('output_canvas');
+    const canvasCtx = canvasElement.getContext('2d');
 
-<!-- ============================================================
-     SCRIPTUL 1 — KIOSK-UL (stări, meniu, pagini, cursor, joc)
-     ============================================================ -->
-<script>
-'use strict';
-
-/* ============================================================
-   CONȚINUTUL — date reale preluate de pe www.cntvb.ro (sept. 2026).
-   Editează textele de aici; ele apar în meniu, carusel și pagini.
-   ============================================================ */
-const PAGINI = {
-  despre: {
-    icon: '🏛️', titlu: 'Despre colegiu', scurt: 'povestea noastră',
-    html: `
-      <h3>Cine suntem</h3>
-      <p>Colegiul Național „Tudor Vladimirescu” București (CNTVB) — un liceu național din
-      Sectorul 6, aproape de metrou Lujerului și Politehnica.</p>
-      <h3>De ce „Tudor Vladimirescu”?</h3>
-      <p>Colegiul poartă numele eroului Tudor Vladimirescu, conducătorul revoluției române
-      de la 1821 — revoluția care a marcat un moment important în formarea națiunii române.</p>
-      <h3>Comunitate</h3>
-      <ul>
-        <li>Asociația Părinți-Profesori <b>APPCNTVB</b> — creată în 2025</li>
-        <li>Proiecte internaționale, inclusiv <b>Erasmus+</b></li>
-        <li>Activități și proiecte extrașcolare, locale și naționale</li>
-      </ul>
-      <p class="sursa">Sursa: <a href="https://www.cntvb.ro/index.php/despre-noi" target="_blank" rel="noopener">www.cntvb.ro</a></p>`
-  },
-  specializari: {
-    icon: '🎓', titlu: 'Specializări', scurt: '4 profiluri',
-    html: `
-      <h3>Ce poți deveni aici</h3>
-      <table>
-        <tr><th>Specializarea</th><th>Clase cls. a IX-a</th><th>Media de admitere</th></tr>
-        <tr><td>Matematică-informatică</td><td>2</td><td class="numar">9,02</td></tr>
-        <tr><td>Științe ale naturii</td><td>2</td><td class="numar">8,95</td></tr>
-        <tr><td>Filologie</td><td>1</td><td class="numar">8,87</td></tr>
-        <tr><td>Științe sociale</td><td>3</td><td class="numar">8,80</td></tr>
-      </table>
-      <p>Date: admiterea <b>2025–2026</b> (ultimele publicate pe site-ul colegiului).</p>
-      <p class="sursa">Sursa: <a href="https://www.cntvb.ro/index.php/elevi/admitere" target="_blank" rel="noopener">cntvb.ro → Admitere</a></p>`
-  },
-  admitere: {
-    icon: '📝', titlu: 'Admitere', scurt: 'medii & pași',
-    html: `
-      <h3>Vrei să devii elev CNTVB?</h3>
-      <p>Admiterea în învățământul liceal se face conform metodologiei Ministerului Educației,
-      pe baza mediilor de la evaluarea națională / admiterea liceală.</p>
-      <h3>Medii de admitere (2025–2026)</h3>
-      <ul>
-        <li>Matematică-informatică — <b>9,02</b></li>
-        <li>Științe ale naturii — <b>8,95</b></li>
-        <li>Filologie — <b>8,87</b></li>
-        <li>Științe sociale — <b>8,80</b></li>
-      </ul>
-      <p>📱 Broșura oficială de admitere și noutățile curente se găsesc pe site-ul colegiului,
-      la secțiunea <a href="https://www.cntvb.ro/index.php/elevi/admitere" target="_blank" rel="noopener">Elevi → Admitere</a>.</p>
-      <p class="sursa">Verifică întotdeauna datele oficiale înainte de înscriere!</p>`
-  },
-  performante: {
-    icon: '🏆', titlu: 'Performanțe', scurt: 'diplome & Erasmus+',
-    html: `
-      <h3>La ce ne mândrim</h3>
-      <ul>
-        <li><b>87</b> de diplome obținute în anul școlar 2023–2024</li>
-        <li><b>35</b> de diplome în 2024–2025</li>
-        <li><b>9</b> elevi participanți la mobilități <b>Erasmus+</b> în 2024</li>
-        <li>Colegiul găzduiește concursuri și etape de olimpiadă: limba română, limba franceză, științe socio-umane</li>
-      </ul>
-      <p class="sursa">Sursa: <a href="https://www.cntvb.ro/index.php/elevi/performanta-in-cntvb" target="_blank" rel="noopener">cntvb.ro → Performanța în CNTVB</a></p>`
-  },
-  contact: {
-    icon: '📍', titlu: 'Contact & program', scurt: 'unde ne găsești',
-    html: `
-      <h3>Colegiul Național „Tudor Vladimirescu” București</h3>
-      <ul>
-        <li>📍 Bulevardul Iuliu Maniu nr. 15, Sector 6, București, cod 061075</li>
-        <li>🚇 Metrou: <b>Lujerului</b> / <b>Politehnica</b></li>
-        <li>☎️ Telefon: <b>+40 21 410 38 31</b> · Fax: +40 21 411 87 08</li>
-        <li>✉️ E-mail: <b>secretariatltv@yahoo.com</b></li>
-        <li>🕑 Program secretariat: <b>Luni–Joi 11:00–13:00</b></li>
-      </ul>
-      <p>Site oficial: <a href="https://www.cntvb.ro" target="_blank" rel="noopener">www.cntvb.ro</a></p>
-      <p class="sursa">Date preluate de pe cntvb.ro (septembrie 2026) — verifică programul în vacanțe!</p>`
-  },
-};
-
-/* intrarea specială „Tur Virtual” (duce la tur.html) */
-const TUR = { id: 'tur', icon: '🕶️', titlu: 'Tur Virtual 360°', scurt: 'vezi liceul!', href: 'tur.html' };
-
-/* ============================================================
-   Elemente din pagină
-   ============================================================ */
-const ecrane = {
-  idle: document.getElementById('ecran-idle'),
-  meniu: document.getElementById('ecran-meniu'),
-  pag: document.getElementById('ecran-pagina'),
-  joc: document.getElementById('ecran-joc'),
-};
-const elCeasOra = document.getElementById('ceas-ora');
-const elCeasData = document.getElementById('ceas-data');
-const elPista = document.getElementById('carusel-pista');
-const elGalerie = document.getElementById('galerie-meniu');
-const elPagTitlu = document.getElementById('pag-titlu');
-const elPagContinut = document.getElementById('pag-continut');
-const elListaLaterala = document.getElementById('lista-laterala');
-const elToast = document.getElementById('toast');
-const elBadgeMod = document.getElementById('badge-mod');
-const elStatusCamera = document.getElementById('status-camera');
-const panouCamera = document.getElementById('panou-camera');
-const zonaVideo = document.getElementById('zona-video');
-const camOverlay = document.getElementById('camera-urmare');
-const camCtx = camOverlay.getContext('2d');
-const cursor = document.getElementById('cursor');
-const scenaJoc = document.getElementById('joc-scena');
-const canvasJoc = document.getElementById('joc');
-const ctxJoc = canvasJoc.getContext('2d');
-const jocOverlay = document.getElementById('joc-overlay');
-const jocTitluOverlay = document.getElementById('joc-mesaj-titlu');
-const jocTextOverlay = document.getElementById('joc-mesaj-text');
-const butonJocStart = document.getElementById('buton-joc-start');
-
-/* ============================================================
-   Starea kiosk-ului
-   ============================================================ */
-let stare = 'idle';            // 'idle' | 'meniu' | 'pag' | 'joc'
-let modIntrare = 'soricel';    // 'soricel' | 'mana'
-let timerInactivitate = null;
-let hoverEl = null, hoverTimp = 0, ultimulClickT = 0;
-let ciupire = false, ultimaVedereMana = 0, ultimulStatus = '';
-let pozCarusel = 0, latimeCarusel = 0;
-let activX = -999, activY = -999;
-
-function setStatus(text) {
-  if (text !== ultimulStatus) { ultimulStatus = text; elStatusCamera.textContent = text; }
-}
-function toast(text) {
-  elToast.textContent = text;
-  elToast.classList.add('vizibil');
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => elToast.classList.remove('vizibil'), 2200);
-}
-
-/* ============================================================
-   Construirea interfeței din datele PAGINI
-   ============================================================ */
-function construieste() {
-  // caruselul din ecranul de așteptare
-  const carduri = [...Object.entries(PAGINI).map(([id, p]) => ({ id, ...p })), TUR];
-  const rand = carduri.map(c =>
-    `<div class="card-carusel"><span class="icon">${c.icon}</span><div><b>${c.titlu}</b><span>${c.scurt}</span></div></div>`
-  ).join('');
-  elPista.innerHTML = rand + rand; // dublat pentru derulare fără sfârșit
-  requestAnimationFrame(() => { latimeCarusel = elPista.scrollWidth / 2; });
-
-  // galeria de meniu
-  for (const c of carduri) {
-    let el;
-    if (c.href) {
-      el = document.createElement('a');
-      el.href = c.href;
-    } else {
-      el = document.createElement('button');
-      el.dataset.pagina = c.id;
-    }
-    el.className = 'tigla kb' + (c.id === 'tur' ? ' tur' : '');
-    el.setAttribute('data-kb', '');
-    el.innerHTML = `<span class="icon">${c.icon}</span><b>${c.titlu}</b><span>${c.scurt}</span>`;
-    elGalerie.appendChild(el);
-  }
-
-  // bara laterală din ecranul de joc
-  for (const c of carduri.filter(c => c.id !== 'tur')) {
-    const el = document.createElement('button');
-    el.className = 'card-mini kb';
-    el.setAttribute('data-kb', '');
-    el.dataset.pagina = c.id;
-    el.innerHTML = `<span class="icon">${c.icon}</span><div><b>${c.titlu}</b><span>${c.scurt}</span></div>`;
-    elListaLaterala.appendChild(el);
-  }
-}
-
-/* ============================================================
-   Schimbarea ecranelor + logica de inactivitate
-   ============================================================ */
-function arataEcran(nume) {
-  stare = nume;
-  for (const k in ecrane) ecrane[k].classList.toggle('activ', k === nume);
-  reseteazaInactivitate();
-  if (nume === 'joc') pornesteJoc(); // jocul pornește când intri pe ecran
-}
-
-function deschideMeniu(dinPrezenta) {
-  if (stare !== 'idle') return;
-  arataEcran('meniu');
-  if (dinPrezenta) toast('Te-am văzut! Bun venit! 👋');
-}
-
-function deschidePagina(id) {
-  const p = PAGINI[id];
-  if (!p) return;
-  elPagTitlu.textContent = p.icon + ' ' + p.titlu;
-  elPagContinut.innerHTML = p.html;
-  elPagContinut.scrollTop = 0;
-  arataEcran('pag');
-}
-
-function reseteazaInactivitate() {
-  clearTimeout(timerInactivitate);
-  if (stare === 'meniu') {
-    timerInactivitate = setTimeout(() => {
-      arataEcran('joc');
-      toast('Nu te-ai hotărât? Prinde gânduri! 🧺');
-    }, 25000);
-  } else if (stare === 'pag') {
-    timerInactivitate = setTimeout(() => {
-      arataEcran('meniu');
-      toast('Te-am întors la meniu 🙂');
-    }, 45000);
-  }
-}
-
-/* orice mișcare reală (mouse/tastatură) înseamnă „cineva e aici” */
-document.addEventListener('pointermove', () => reseteazaInactivitate());
-document.addEventListener('keydown', (e) => {
-  reseteazaInactivitate();
-  if (e.key === 'Escape' && (stare === 'pag' || stare === 'joc')) arataEcran('meniu');
-  if (e.key === 'm' || e.key === 'M') setModIntrare(modIntrare === 'soricel' ? 'mana' : 'soricel');
-});
-document.addEventListener('pointerdown', () => {
-  trezesteAudio();
-  if (stare === 'idle') deschideMeniu(false);
-});
-
-/* navigarea: un singur delegat pentru toate butoanele cu data-pagina */
-document.addEventListener('click', (e) => {
-  const t = e.target.closest('[data-pagina]');
-  if (t) { beep(620, 0.06, 'sine', 0, 0.1); deschidePagina(t.dataset.pagina); return; }
-  const a = e.target.closest('[data-actiune="meniu"]');
-  if (a) { beep(620, 0.06, 'sine', 0, 0.1); arataEcran('meniu'); }
-});
-document.getElementById('buton-inapoi').addEventListener('click', () => arataEcran('meniu'));
-
-/* ============================================================
-   Ceasul din ecranul de așteptare
-   ============================================================ */
-function actualizeazaCeas() {
-  const acum = new Date();
-  elCeasOra.textContent = acum.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
-  elCeasData.textContent = acum.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-}
-setInterval(actualizeazaCeas, 1000);
-actualizeazaCeas();
-
-/* ============================================================
-   Sunet (bip-uri generate, fără fișiere)
-   ============================================================ */
-let audioCtx = null;
-function trezesteAudio() {
-  if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    catch { audioCtx = null; }
-  }
-  try { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch {}
-}
-function beep(frecventa, durata = 0.08, tip = 'sine', intarziere = 0, volum = 0.12) {
-  if (!audioCtx) return;
-  try {
-    const t = audioCtx.currentTime + intarziere;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = tip; osc.frequency.value = frecventa;
-    gain.gain.setValueAtTime(volum, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + durata);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(t); osc.stop(t + durata);
-  } catch {}
-}
-const sunetBunJoc = () => beep(680, 0.08);
-const sunetRauJoc = () => { beep(160, 0.22, 'sawtooth', 0, 0.16); beep(110, 0.28, 'sawtooth', 0.05, 0.12); };
-const sunetNivelJoc = () => { beep(523, 0.09, 'triangle'); beep(659, 0.09, 'triangle', 0.09); beep(784, 0.12, 'triangle', 0.18); };
-
-/* ============================================================
-   JOCUL „Prinzătorul de gânduri” (adaptat din HandWave v2)
-   ============================================================ */
-const LJ = canvasJoc.width, HJ = canvasJoc.height, Y_COS = HJ - 46;
-const joc = {
-  merge: false, scor: 0, record: 0, vieti: 3, nivel: 1,
-  obiecte: [], particule: [], texte: [], timp: 0, timpSpawn: 0.6,
-  tintaX: LJ / 2, cosX: LJ / 2, flash: 0,
-};
-try { joc.record = Number(localStorage.getItem('cntvb_kiosk_record')) || 0; } catch {}
-function salveazaRecord() { try { localStorage.setItem('cntvb_kiosk_record', String(joc.record)); } catch {} }
-document.getElementById('joc-record').textContent = joc.record;
-
-function pornesteJoc() {
-  joc.merge = true; joc.scor = 0; joc.vieti = 3; joc.nivel = 1;
-  joc.obiecte = []; joc.particule = []; joc.texte = []; joc.timp = 0; joc.timpSpawn = 0.5;
-  jocOverlay.classList.add('ascuns');
-  actualizeazaHUDJoc();
-  sunetNivelJoc();
-}
-function terminaJocul() {
-  joc.merge = false;
-  const recordNou = joc.scor > joc.record;
-  if (recordNou) { joc.record = joc.scor; salveazaRecord(); document.getElementById('joc-record').textContent = joc.record; }
-  jocTitluOverlay.textContent = recordNou ? '🏆 Record nou!' : 'Gata! 🫠';
-  jocTextOverlay.textContent = 'Scor: ' + joc.scor + ' · Nivel: ' + joc.nivel + ' · Record: ' + joc.record;
-  butonJocStart.innerHTML = '↻ Încă o dată';
-  jocOverlay.classList.remove('ascuns');
-  actualizeazaHUDJoc();
-}
-function actualizeazaHUDJoc() {
-  document.getElementById('joc-scor').textContent = joc.scor;
-  document.getElementById('joc-vieti').textContent = '❤️'.repeat(joc.vieti) + '🖤'.repeat(Math.max(0, 3 - joc.vieti));
-}
-function prindeJoc(o) {
-  if (o.rau) {
-    joc.vieti--; joc.flash = 0.55; sunetRauJoc();
-    joc.texte.push({ x: o.x, y: o.y - 18, text: '−1 ❤️', viata: 1, rau: true });
-    scenaJoc.classList.remove('scuturare'); void scenaJoc.offsetWidth; scenaJoc.classList.add('scuturare');
-  } else {
-    joc.scor++; sunetBunJoc();
-    joc.texte.push({ x: o.x, y: o.y - 18, text: '+1', viata: 1, rau: false });
-    const nivelNou = 1 + Math.floor(joc.scor / 10);
-    if (nivelNou > joc.nivel) { joc.nivel = nivelNou; toast('⚡ Nivel ' + joc.nivel + '!'); sunetNivelJoc(); }
-  }
-  for (let i = 0; i < 8; i++) {
-    const unghi = Math.random() * Math.PI * 2;
-    joc.particule.push({
-      x: o.x, y: o.y,
-      vx: Math.cos(unghi) * (50 + Math.random() * 100),
-      vy: Math.sin(unghi) * (50 + Math.random() * 100) - 50,
-      viata: 0.5 + Math.random() * 0.2,
-      culoare: o.rau ? '#ff5470' : ['#22d3a5', '#7c6cff', '#ffe066'][i % 3],
-      r: 2 + Math.random() * 2,
+    // Optimizare viteza detecție (model_complexity: 0 pt telefoane/laptopuri slabe)
+    const hands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
     });
-  }
-  actualizeazaHUDJoc();
-  if (joc.vieti <= 0) terminaJocul();
-}
-function actualizeazaJoc(dt) {
-  joc.cosX += (joc.tintaX - joc.cosX) * Math.min(1, dt * 10);
-  joc.cosX = Math.max(50, Math.min(LJ - 50, joc.cosX));
-  joc.timpSpawn -= dt;
-  if (joc.timpSpawn <= 0) {
-    const rau = joc.timp > 4 && Math.random() < 0.22;
-    const lista = rau ? ['📱', '🎮'] : ['📚', '✏️', '💡', '🧠', '🔬'];
-    const viteza = Math.min(380, 150 + (joc.nivel - 1) * 45);
-    joc.obiecte.push({
-      x: 30 + Math.random() * (LJ - 60), y: -30,
-      vy: viteza * (0.85 + Math.random() * 0.35),
-      rot: (Math.random() - 0.5) * 0.6, vr: (Math.random() - 0.5) * 1.2,
-      rau: rau, emoji: lista[Math.floor(Math.random() * lista.length)],
+    
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 0, // 0 = Rapid (mobil), 1 = Balansat
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
     });
-    joc.timpSpawn = Math.max(0.45, 1.05 - (joc.nivel - 1) * 0.08);
-  }
-  joc.timp += dt;
-  for (let i = joc.obiecte.length - 1; i >= 0; i--) {
-    const o = joc.obiecte[i];
-    o.y += o.vy * dt; o.rot += o.vr * dt;
-    if (o.y > HJ - 100 && o.y < HJ - 24 && Math.abs(o.x - joc.cosX) < 55) {
-      joc.obiecte.splice(i, 1); prindeJoc(o); continue;
-    }
-    if (o.y > HJ + 40) joc.obiecte.splice(i, 1);
-  }
-  for (let i = joc.particule.length - 1; i >= 0; i--) {
-    const p = joc.particule[i];
-    p.vy += 420 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.viata -= dt;
-    if (p.viata <= 0) joc.particule.splice(i, 1);
-  }
-  for (let i = joc.texte.length - 1; i >= 0; i--) {
-    const t = joc.texte[i];
-    t.y -= 40 * dt; t.viata -= dt * 1.4;
-    if (t.viata <= 0) joc.texte.splice(i, 1);
-  }
-  if (joc.flash > 0) joc.flash = Math.max(0, joc.flash - dt);
-}
-function deseneazaJoc() {
-  const grad = ctxJoc.createLinearGradient(0, 0, 0, HJ);
-  grad.addColorStop(0, '#0d1226'); grad.addColorStop(1, '#131a38');
-  ctxJoc.fillStyle = grad; ctxJoc.fillRect(0, 0, LJ, HJ);
-  ctxJoc.fillStyle = 'rgba(255,255,255,.05)'; ctxJoc.fillRect(0, HJ - 22, LJ, 22);
-  ctxJoc.textAlign = 'center'; ctxJoc.textBaseline = 'middle';
-  for (const o of joc.obiecte) {
-    ctxJoc.save(); ctxJoc.translate(o.x, o.y); ctxJoc.rotate(o.rot);
-    ctxJoc.beginPath(); ctxJoc.arc(0, 0, 22, 0, Math.PI * 2);
-    ctxJoc.fillStyle = o.rau ? 'rgba(255,84,112,.16)' : 'rgba(34,211,165,.13)';
-    ctxJoc.fill();
-    ctxJoc.font = '32px "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif';
-    ctxJoc.fillText(o.emoji, 0, 2); ctxJoc.restore();
-  }
-  const inclinare = Math.max(-0.25, Math.min(0.25, (joc.tintaX - joc.cosX) * 0.004));
-  ctxJoc.save(); ctxJoc.translate(joc.cosX, Y_COS); ctxJoc.rotate(inclinare);
-  ctxJoc.font = '52px "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif';
-  ctxJoc.fillText('🧺', 0, 0); ctxJoc.restore();
-  for (const p of joc.particule) {
-    ctxJoc.globalAlpha = Math.max(0, p.viata / 0.6);
-    ctxJoc.fillStyle = p.culoare;
-    ctxJoc.beginPath(); ctxJoc.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctxJoc.fill();
-  }
-  ctxJoc.globalAlpha = 1;
-  for (const t of joc.texte) {
-    ctxJoc.globalAlpha = Math.max(0, t.viata);
-    ctxJoc.fillStyle = t.rau ? '#ff5470' : '#9df3dc';
-    ctxJoc.font = 'bold 22px system-ui, sans-serif';
-    ctxJoc.fillText(t.text, t.x, t.y);
-  }
-  ctxJoc.globalAlpha = 1;
-  if (joc.flash > 0) {
-    ctxJoc.fillStyle = 'rgba(255,60,90,' + (joc.flash * 0.4).toFixed(3) + ')';
-    ctxJoc.fillRect(0, 0, LJ, HJ);
-  }
-}
-butonJocStart.addEventListener('click', pornesteJoc);
-canvasJoc.addEventListener('pointermove', (e) => {
-  if (modIntrare !== 'soricel') return;
-  const r = canvasJoc.getBoundingClientRect();
-  joc.tintaX = ((e.clientX - r.left) / r.width) * LJ;
-});
 
-/* evidențierea rotativă a cardurilor din bara laterală */
-let indexLateral = 0;
-setInterval(() => {
-  const carduri = elListaLaterala.children;
-  if (!carduri.length) return;
-  indexLateral = (indexLateral + 1) % carduri.length;
-  for (let i = 0; i < carduri.length; i++) carduri[i].classList.toggle('stralucit', i === indexLateral);
-}, 4000);
+    hands.onResults((results) => {
+      canvasElement.width = videoElement.videoWidth || 480;
+      canvasElement.height = videoElement.videoHeight || 360;
 
-/* ============================================================
-   Bucla principală: carusel + joc
-   ============================================================ */
-let timpUltimCadru = performance.now();
-function bucla(timp) {
-  const dt = Math.min(0.05, Math.max(0, (timp - timpUltimCadru) / 1000));
-  timpUltimCadru = timp;
-  if (stare === 'idle' && latimeCarusel > 0) {
-    pozCarusel -= 45 * dt;
-    if (pozCarusel <= -latimeCarusel) pozCarusel += latimeCarusel;
-    elPista.style.transform = 'translateX(' + pozCarusel.toFixed(1) + 'px)';
-  }
-  if (stare === 'joc') {
-    if (joc.merge) actualizeazaJoc(dt);
-    deseneazaJoc();
-  }
-  requestAnimationFrame(bucla);
-}
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-/* ============================================================
-   Modul de intrare: mouse vs. mână
-   ============================================================ */
-function setModIntrare(mod) {
-  if (modIntrare === mod) return;
-  modIntrare = mod;
-  document.body.classList.toggle('mana', mod === 'mana');
-  elBadgeMod.textContent = mod === 'mana' ? '🖐️ Mână' : '🖱️ Șoarece';
-  elBadgeMod.classList.toggle('soricel', mod === 'soricel');
-}
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        // Punctul 8 = Vârful degetului arătător
+        const indexTip = landmarks[8];
+        
+        const x = indexTip.x * canvasElement.width;
+        const y = indexTip.y * canvasElement.height;
 
-function setHover(el) {
-  if (hoverEl) hoverEl.classList.remove('plan');
-  hoverEl = el; hoverTimp = performance.now();
-  if (el) el.classList.add('plan');
-}
-function faClick(el) {
-  const acum = performance.now();
-  if (acum - ultimulClickT < 900) return; // pauză de protecție
-  ultimulClickT = acum;
-  setHover(null);
-  if (el) { beep(620, 0.06, 'sine', 0, 0.1); el.click(); }
-}
-
-/* desenează punctele mâinii peste micul video din colț */
-function deseneazaMana(puncte) {
-  const w = camOverlay.width, h = camOverlay.height;
-  camCtx.clearRect(0, 0, w, h);
-  const punct = (p) => ({ x: (1 - p.x) * w, y: p.y * h });
-  const LEGATURI = [
-    [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],
-    [9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17],
-  ];
-  camCtx.strokeStyle = 'rgba(0,255,190,.75)'; camCtx.lineWidth = 2;
-  for (const [a, b] of LEGATURI) {
-    const p1 = punct(puncte[a]), p2 = punct(puncte[b]);
-    camCtx.beginPath(); camCtx.moveTo(p1.x, p1.y); camCtx.lineTo(p2.x, p2.y); camCtx.stroke();
-  }
-  camCtx.fillStyle = '#fff';
-  for (let i = 0; i <= 20; i++) {
-    const p = punct(puncte[i]);
-    camCtx.beginPath(); camCtx.arc(p.x, p.y, i === 8 ? 5 : 2.5, 0, Math.PI * 2); camCtx.fill();
-  }
-  const varf = punct(puncte[8]);
-  camCtx.strokeStyle = '#22d3a5'; camCtx.lineWidth = 2.5;
-  camCtx.beginPath(); camCtx.arc(varf.x, varf.y, 10, 0, Math.PI * 2); camCtx.stroke();
-}
-
-/* ============================================================
-   Interfața pentru modulul de cameră (MediaPipe, Scriptul 2)
-   ============================================================ */
-window.Kiosk = {
-  /* apelat de ~30 de ori pe secundă cu cele 21 de puncte ale mâinii */
-  mana(puncte) {
-    setModIntrare('mana');
-    ultimaVedereMana = performance.now();
-    setStatus('🖐️ Mână detectată');
-
-    // 1) vârful arătătorului = cursor pe ecran
-    const cx = (1 - puncte[8].x) * window.innerWidth;
-    const cy = puncte[8].y * window.innerHeight;
-    cursor.style.transform = 'translate(' + (cx - 28) + 'px,' + (cy - 28) + 'px)';
-
-    // 2) prezență: dacă eram în așteptare → deschidem meniul
-    if (stare === 'idle') deschideMeniu(true);
-
-    // 3) palma = coșul din joc (doar pe ecranul de joc are efect)
-    const palmaX = (puncte[0].x + puncte[5].x + puncte[17].x) / 3;
-    joc.tintaX = (1 - palmaX) * LJ;
-
-    // 4) „țintire” (dwell): stai cu degetul 1,5s peste un buton → se apasă singur
-    const el = document.elementFromPoint(cx, cy);
-    const tinta = el ? el.closest('[data-kb]') : null;
-    if (tinta !== hoverEl) setHover(tinta);
-    else if (tinta && performance.now() - hoverTimp > 1500) faClick(tinta);
-
-    // 5) ciupirea (deget mare + arătător) = click instant
-    const d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-    const raport = d(puncte[4], puncte[8]) / Math.max(0.0001, d(puncte[0], puncte[9]));
-    if (raport < 0.35 && !ciupire) {
-      ciupire = true; cursor.classList.add('ciupit');
-      const elc = document.elementFromPoint(cx, cy);
-      const tc = elc ? elc.closest('[data-kb]') : null;
-      if (tc) faClick(tc);
-    } else if (raport > 0.55 && ciupire) {
-      ciupire = false; cursor.classList.remove('ciupit');
-    }
-
-    // 6) activitate = resetăm cronometrele de inactivitate (doar dacă s-a mișcat)
-    if (Math.hypot(cx - activX, cy - activY) > 25) {
-      activX = cx; activY = cy;
-      reseteazaInactivitate();
-    }
-
-    deseneazaMana(puncte);
-  },
-
-  manaPierduta() {
-    camCtx.clearRect(0, 0, camOverlay.width, camOverlay.height);
-    setHover(null);
-    if (modIntrare === 'mana' && performance.now() - ultimaVedereMana > 800) {
-      setStatus('👀 Caut mâna…');
-    }
-  },
-
-  cameraPornita() {
-    zonaVideo.style.display = 'block';
-    panouCamera.classList.add('activ');
-    setStatus('✋ Arată mâna către cameră');
-  },
-
-  faraCamera(mesaj) {
-    zonaVideo.style.display = 'none';
-    setModIntrare('soricel');
-    setStatus('🖱️ Mod șoarece — ' + (mesaj || 'camera indisponibilă'));
-  },
-};
-
-/* ============================================================
-   Start!
-   ============================================================ */
-construieste();
-setHover(null);
-requestAnimationFrame(bucla);
-</script>
-
-<!-- ============================================================
-     SCRIPTUL 2 — CAMERA + MediaPipe (la fel ca în HandWave)
-     Dacă eșuează (fără internet / cameră refuzată), kiosk-ul
-     funcționează în continuare cu mouse-ul.
-     ============================================================ -->
-<script type="module">
-const K = window.Kiosk;
-const LEGATURA_MODELE = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-
-try {
-  const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14');
-  const WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
-  const fileset = await vision.FilesetResolver.forVisionTasks(WASM);
-
-  const construieste = (delegate) => vision.HandLandmarker.createFromOptions(fileset, {
-    baseOptions: { modelAssetPath: LEGATURA_MODELE, delegate: delegate },
-    runningMode: 'VIDEO',
-    numHands: 1,
-  });
-  let landmarker;
-  try { landmarker = await construieste('GPU'); }
-  catch { landmarker = await construieste('CPU'); }
-
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'user', width: 640, height: 480 },
-  });
-  const video = document.getElementById('camera');
-  video.srcObject = stream;
-  await video.play();
-  K.cameraPornita();
-
-  let esecuriLaRand = 0;
-  const bucla = () => {
-    if (video.readyState >= 2) {
-      try {
-        const rezultat = landmarker.detectForVideo(video, performance.now());
-        esecuriLaRand = 0;
-        if (rezultat.landmarks && rezultat.landmarks.length > 0) {
-          K.mana(rezultat.landmarks[0]);
-        } else {
-          K.manaPierduta();
-        }
-      } catch {
-        if (++esecuriLaRand > 15) {
-          K.faraCamera('modelul AI nu a putut rula pe acest dispozitiv');
-          return;
-        }
+        // Randare Cursor Vizual BOLD
+        canvasCtx.beginPath();
+        canvasCtx.arc(x, y, 12, 0, 2 * Math.PI);
+        canvasCtx.fillStyle = '#38bdf8';
+        canvasCtx.fill();
+        canvasCtx.lineWidth = 3;
+        canvasCtx.strokeStyle = '#ffffff';
+        canvasCtx.stroke();
       }
-    }
-    requestAnimationFrame(bucla);
-  };
-  requestAnimationFrame(bucla);
-} catch (eroare) {
-  const nume = (eroare && eroare.name) || '';
-  const mesaj =
-    nume === 'NotAllowedError' ? 'camera a fost refuzată' :
-    nume === 'NotFoundError' ? 'nu am găsit o cameră' :
-    'fără internet sau cameră indisponibilă';
-  K.faraCamera(mesaj);
-}
-</script>
+      canvasCtx.restore();
+    });
 
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await hands.send({image: videoElement});
+      },
+      width: 480,
+      height: 360
+    });
+    camera.start();
+  </script>
 </body>
 </html>

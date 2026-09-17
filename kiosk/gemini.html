@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chioșc Inteligent - Meniu & Asistent Vocal</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-neon: #06b6d4;
+      --accent-purple: #8b5cf6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* 1. CONTAINER INTERFAȚĂ CHIOȘC (GLASSMORPHISM) */
+    .kiosk-card {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* 2. MENIU ŞI HEADER ADAPTABIL */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent-neon), var(--accent-purple));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .brand-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .nav-link.active, .nav-link:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--accent-neon);
+    }
+
+    /* 3. GRILĂ MENIU PRODUSE */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .menu-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .menu-item:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-neon);
+    }
+
+    .menu-thumb {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(135deg, #334155, #1e293b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+
+    .item-details {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-grow: 1;
+    }
+
+    .item-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .item-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .item-price {
+      font-weight: 700;
+      color: var(--accent-neon);
+      margin-top: auto;
+      padding-top: 8px;
+    }
+
+    /* 4. MODUL VOCAL & SOLUȚIE DE REZERVĂ (FALLBACK) */
+    .voice-control-panel {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+
+    .mic-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--accent-neon), var(--accent-purple));
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .mic-btn.listening {
+      animation: pulse 1.5s infinite;
+      background: #ef4444;
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1.08); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .status-text {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .fallback-input-group {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 500px;
+      margin-top: 10px;
+    }
+
+    .text-input {
+      flex-grow: 1;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: rgba(30, 41, 59, 0.9);
+      color: white;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .text-input:focus {
+      border-color: var(--accent-neon);
+    }
+
+    .submit-btn {
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent-neon);
+      color: #0f172a;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .submit-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* 5. MEDIA QUERIES PENTRU DISPOZITIVE MOBILE */
+    @media (max-width: 768px) {
+      .kiosk-card {
+        padding: 20px;
+      }
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .nav-menu {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+      .fallback-input-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="kiosk-card">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-logo">AI</div>
+        <div class="brand-title">Smart Kiosk</div>
+      </div>
+      <nav class="nav-menu">
+        <a href="#" class="nav-link active">Meniu Principal</a>
+        <a href="#" class="nav-link">Comenzi</a>
+        <a href="#" class="nav-link">Informații</a>
+      </nav>
+    </header>
+
+    <main class="menu-grid">
+      <div class="menu-item">
+        <div class="menu-thumb">🍔</div>
+        <div class="item-details">
+          <h3 class="item-title">Burger Classic</h3>
+          <p class="item-desc">Carne de vită, brânză cheddar și sos special.</p>
+          <span class="item-price">28.00 RON</span>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="menu-thumb">🍕</div>
+        <div class="item-details">
+          <h3 class="item-title">Pizza Margherita</h3>
+          <p class="item-desc">Sos de roșii, mozzarella proaspătă și busuioc.</p>
+          <span class="item-price">32.00 RON</span>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="menu-thumb">🍹</div>
+        <div class="item-details">
+          <h3 class="item-title">Limonadă Artesanală</h3>
+          <p class="item-desc">Lămâie, mentă proaspătă și miere de albine.</p>
+          <span class="item-price">14.00 RON</span>
+        </div>
+      </div>
+    </main>
+
+    <section class="voice-control-panel">
+      <div class="mic-button-container">
+        <button id="micBtn" class="mic-btn" title="Apasă pentru comanda vocală">🎤</button>
+      </div>
+      <p id="statusText" class="status-text">Apasă pe microfon și spune numele tău sau comanda dorită.</p>
+
+      <div class="fallback-input-group">
+        <input type="text" id="manualInput" class="text-input" placeholder="Sau scrie numele / comanda aici (dacă e zgomot)...">
+        <button id="sendBtn" class="submit-btn">Trimite</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const micBtn = document.getElementById('micBtn');
+    const statusText = document.getElementById('statusText');
+    const manualInput = document.getElementById('manualInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      
+      // Ajustare parametrii pentru zgomotul de fond (clase/holuri)
+      recognition.lang = 'ro-RO';
+      recognition.continuous = false; 
+      recognition.interimResults = false; 
+
+      micBtn.addEventListener('click', () => {
+        if (micBtn.classList.contains('listening')) {
+          recognition.stop();
+        } else {
+          recognition.start();
+        }
+      });
+
+      recognition.onstart = () => {
+        micBtn.classList.add('listening');
+        statusText.innerText = 'Ascult... Vorbește clar în dreptul microfonului.';
+      };
+
+      recognition.onend = () => {
+        micBtn.classList.remove('listening');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        statusText.innerText = `Am recepționat: "${transcript}"`;
+        manualInput.value = transcript;
+      };
+
+      recognition.onerror = (event) => {
+        micBtn.classList.remove('listening');
+        statusText.innerText = 'Zgomot prea mare sau microfon nedetectat. Folosește câmpul text de mai jos.';
+      };
+    } else {
+      statusText.innerText = 'Recunoașterea vocală nu este suportată pe acest browser. Folosește introducerea manuală.';
+      micBtn.style.opacity = '0.5';
+      micBtn.disabled = true;
+    }
+
+    sendBtn.addEventListener('click', () => {
+      const val = manualInput.value.trim();
+      if (val) {
+        statusText.innerText = `Preluat manual: "${val}"`;
+      }
+    });
+  </script>
+</body>
+</html>
