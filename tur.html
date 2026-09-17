@@ -2,124 +2,115 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1f">
+<meta name="description" content="Tur virtual demonstrativ al Colegiului Național Tudor Vladimirescu București.">
 <title>Tur Virtual 360° — C.N. „Tudor Vladimirescu” București</title>
 <style>
-  :root { --accent: #22d3a5; --gri: #8b93b8; }
+  :root { --accent: #22d3a5; --gri: #c3c9e6; --panel: rgba(10,14,31,.86); }
+  * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: #0a0e1f; overflow: hidden;
-    font-family: system-ui, "Segoe UI", Roboto, sans-serif; }
+    font-family: system-ui, "Segoe UI", Roboto, sans-serif; color: #eef1ff; }
   a-scene { width: 100%; height: 100%; }
+  button, a { font: inherit; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
   #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
   #titlu-camera {
-    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    position: absolute; top: max(18px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
     padding: 10px 22px; border-radius: 999px; font-size: 17px; color: #eef1ff;
-    background: rgba(10,14,31,.75); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px);
+    background: var(--panel); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px);
+    white-space: nowrap; max-width: min(72vw, 520px); overflow: hidden; text-overflow: ellipsis;
   }
-  #buton-kiosk {
-    position: absolute; top: 18px; left: 18px; pointer-events: auto;
-    padding: 10px 16px; border-radius: 10px; font-size: 14px; text-decoration: none;
-    background: rgba(20,27,54,.9); color: #eef1ff; border: 1px solid rgba(255,255,255,.18);
+  #buton-kiosk, #buton-ajutor {
+    position: absolute; top: max(18px, env(safe-area-inset-top)); pointer-events: auto;
+    min-height: 44px; padding: 10px 16px; border-radius: 10px; font-size: 14px;
+    background: var(--panel); color: #eef1ff; border: 1px solid rgba(255,255,255,.18);
+    text-decoration: none; cursor: pointer;
   }
-  #buton-kiosk:hover { border-color: var(--accent); }
+  #buton-kiosk { left: max(18px, env(safe-area-inset-left)); }
+  #buton-ajutor { right: max(18px, env(safe-area-inset-right)); }
+  #buton-kiosk:hover, #buton-ajutor:hover { border-color: var(--accent); }
   #hint {
-    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-    color: var(--gri); font-size: 13px; background: rgba(10,14,31,.6);
-    padding: 6px 16px; border-radius: 999px; white-space: nowrap; max-width: 94vw; overflow: hidden;
+    position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+    color: var(--gri); font-size: 13px; background: var(--panel); border: 1px solid rgba(255,255,255,.12);
+    padding: 8px 16px; border-radius: 999px; white-space: nowrap; max-width: 94vw; overflow: hidden;
+    text-overflow: ellipsis; text-align: center;
   }
   #fundal { position: fixed; inset: 0; background: #06091a; opacity: 0;
     transition: opacity .35s; pointer-events: none; z-index: 5; }
+  #incarcare, #eroare {
+    position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px;
+    background: radial-gradient(circle at 50% 30%, #1b2450, #0a0e1f 70%); text-align: center;
+  }
+  #incarcare.ascuns, #eroare.ascuns { display: none; }
+  .mesaj { max-width: 540px; padding: 26px; border-radius: 20px; background: var(--panel);
+    border: 1px solid rgba(255,255,255,.14); box-shadow: 0 16px 50px rgba(0,0,0,.3); }
+  .mesaj h1 { margin: 0 0 10px; font-size: clamp(22px, 4vw, 34px); }
+  .mesaj p { margin: 8px 0; color: var(--gri); line-height: 1.55; }
+  .mesaj button { margin-top: 14px; padding: 11px 18px; border: 0; border-radius: 10px;
+    background: var(--accent); color: #062018; font-weight: 700; cursor: pointer; }
+  @media (max-width: 600px) {
+    #titlu-camera { top: 72px; font-size: 15px; }
+    #hint { bottom: 12px; font-size: 12px; }
+    #buton-kiosk, #buton-ajutor { font-size: 13px; padding: 9px 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
 </style>
 </head>
 <body>
-
+<div id="incarcare"><div class="mesaj"><h1>Se pregătește turul…</h1><p>Încarc scena 360° și imaginile demo.</p></div></div>
+<div id="eroare" class="ascuns"><div class="mesaj"><h1>Turul nu s-a putut încărca</h1><p id="mesaj-eroare">Verifică dacă fișierele panorame/ există sau pornește proiectul printr-un server local.</p><button id="reincarca">Încearcă din nou</button></div></div>
 <div id="fundal"></div>
-
-<div id="hud">
-  <a href="kiosk.html" id="buton-kiosk">← Înapoi la recepție</a>
-  <div id="titlu-camera">Holul colegiului</div>
-  <div id="hint">🖥️ trage cu mouse-ul &nbsp;·&nbsp; 📱 mișcă telefonul &nbsp;·&nbsp; 🔵 privește 1,5s peste o destinație ca să mergi acolo</div>
+<div id="hud" aria-label="Controale tur virtual">
+  <a href="kiosk.html" id="buton-kiosk" aria-label="Înapoi la recepție">← Recepție</a>
+  <div id="titlu-camera" aria-live="polite">Holul colegiului</div>
+  <button id="buton-ajutor" type="button" aria-label="Afișează instrucțiunile">?</button>
+  <div id="hint">🖥️ trage cu mouse-ul · 📱 mișcă telefonul · 🔵 privește 1,5s pentru a merge</div>
 </div>
 
-<!-- A-Frame: încercăm mai întâi copia locală (funcționează și fără internet),
-     apoi CDN-ul ca rezervă -->
 <script src="aframe.min.js"></script>
 <script>
-  if (!window.AFRAME) {
-    document.write('<script src="https://aframe.io/releases/1.7.0/aframe.min.js"><\/script>');
-  }
+  if (!window.AFRAME) document.write('<script src="https://aframe.io/releases/1.7.0/aframe.min.js"><\/script>');
 </script>
 
-<a-scene loading-screen="dotsColor: #22d3a5; backgroundColor: #0a0e1f" renderer="colorManagement: true">
-  <a-assets timeout="8000">
-    <img id="pano-hol" src="panorame/hol.jpg" alt="Hol">
-    <img id="pano-laborator" src="panorame/laborator.jpg" alt="Laborator">
-    <img id="pano-biblioteca" src="panorame/biblioteca.jpg" alt="Bibliotecă">
-    <img id="pano-curte" src="panorame/curte.jpg" alt="Curte">
+<a-scene id="scena" loading-screen="dotsColor: #22d3a5; backgroundColor: #0a0e1f"
+  renderer="colorManagement: true; antialias: true" device-orientation-permission-ui="enabled: false">
+  <a-assets timeout="10000">
+    <img id="pano-hol" src="panorame/hol.jpg" alt="Holul colegiului">
+    <img id="pano-laborator" src="panorame/laborator.jpg" alt="Laborator de informatică">
+    <img id="pano-biblioteca" src="panorame/biblioteca.jpg" alt="Biblioteca colegiului">
+    <img id="pano-curte" src="panorame/curte.jpg" alt="Curtea colegiului">
   </a-assets>
-
-  <!-- panorama afișată (se schimbă când mergi în altă cameră) -->
   <a-sky id="cer" src="#pano-hol" rotation="0 0 0"></a-sky>
-
-  <!-- camera + cursorul de privire (merge și pe telefon, cu giroscopul) -->
   <a-entity id="rig" position="0 0 0">
     <a-entity id="camera-privire" camera look-controls="pointerLockEnabled: false" position="0 1.6 0">
-      <a-entity cursor="fuse: true; fuseTimeout: 1500"
-                raycaster="objects: .clickable; far: 60"
-                geometry="primitive: ring; radiusInner: 0.015; radiusOuter: 0.028"
-                material="color: #22d3a5; shader: flat"
-                position="0 0 -0.4"></a-entity>
+      <a-entity cursor="fuse: true; fuseTimeout: 1500" raycaster="objects: .clickable; far: 60"
+        geometry="primitive: ring; radiusInner: 0.015; radiusOuter: 0.028"
+        material="color: #22d3a5; shader: flat" position="0 0 -0.4"></a-entity>
     </a-entity>
   </a-entity>
-
-  <!-- cursor de mouse pentru laptop (click direct) -->
   <a-entity cursor="rayOrigin: mouse" raycaster="objects: .clickable; far: 60"></a-entity>
-
-  <!-- aici se construiesc hotspot-urile camerei curente (din JavaScript) -->
   <a-entity id="hotspoturi"></a-entity>
 </a-scene>
 
 <script>
 'use strict';
-
-/* ============================================================
-   HARTA TURULUI — adaugă aici camere noi când faci poze noi!
-   unghi: 0 = în față, 90 = dreapta, -90 = stânga, 180 = în spate
-   ============================================================ */
 const CAMERE = {
-  hol: {
-    titlu: 'Holul colegiului', imagine: '#pano-hol', infoUnghi: 220,
-    info: 'Holul CNTVB — panoramă demo. Pune poza reală a holului! 📷',
-    legaturi: [
-      { id: 'laborator', eticheta: '→ Laborator IC', unghi: 35 },
-      { id: 'biblioteca', eticheta: '→ Bibliotecă', unghi: 150 },
-      { id: 'curte', eticheta: '→ Curtea', unghi: -110 },
-    ],
-  },
-  laborator: {
-    titlu: 'Laborator de informatică', imagine: '#pano-laborator', infoUnghi: -160,
+  hol: { titlu: 'Holul colegiului', imagine: '#pano-hol', infoUnghi: 220,
+    info: 'Holul CNTVB — panoramă demo. Înlocuiește cu poza reală! 📷',
+    legaturi: [{ id: 'laborator', eticheta: '→ Laborator', unghi: 35 }, { id: 'biblioteca', eticheta: '→ Bibliotecă', unghi: 150 }, { id: 'curte', eticheta: '→ Curte', unghi: -110 }] },
+  laborator: { titlu: 'Laborator de informatică', imagine: '#pano-laborator', infoUnghi: -160,
     info: 'Aici se scrie cod — laboratorul de informatică (demo).',
-    legaturi: [
-      { id: 'hol', eticheta: '→ Hol', unghi: -40 },
-      { id: 'curte', eticheta: '→ Curtea', unghi: 130 },
-    ],
-  },
-  biblioteca: {
-    titlu: 'Biblioteca', imagine: '#pano-biblioteca', infoUnghi: -60,
+    legaturi: [{ id: 'hol', eticheta: '→ Hol', unghi: -40 }, { id: 'curte', eticheta: '→ Curte', unghi: 130 }] },
+  biblioteca: { titlu: 'Biblioteca', imagine: '#pano-biblioteca', infoUnghi: -60,
     info: 'Biblioteca colegiului (demo) — înlocuiește cu poza reală.',
-    legaturi: [
-      { id: 'hol', eticheta: '→ Hol', unghi: 60 },
-      { id: 'laborator', eticheta: '→ Laborator IC', unghi: 190 },
-    ],
-  },
-  curte: {
-    titlu: 'Curtea colegiului', imagine: '#pano-curte', infoUnghi: 180,
+    legaturi: [{ id: 'hol', eticheta: '→ Hol', unghi: 60 }, { id: 'laborator', eticheta: '→ Laborator', unghi: 190 }] },
+  curte: { titlu: 'Curtea colegiului', imagine: '#pano-curte', infoUnghi: 180,
     info: 'Curtea CNTVB (demo) — înlocuiește cu poza reală.',
-    legaturi: [
-      { id: 'hol', eticheta: '→ Hol', unghi: 90 },
-      { id: 'biblioteca', eticheta: '→ Bibliotecă', unghi: -80 },
-    ],
-  },
+    legaturi: [{ id: 'hol', eticheta: '→ Hol', unghi: 90 }, { id: 'biblioteca', eticheta: '→ Bibliotecă', unghi: -80 }] }
 };
 
 let cameraCurenta = 'hol';
@@ -127,60 +118,76 @@ const cer = document.getElementById('cer');
 const titlu = document.getElementById('titlu-camera');
 const fundal = document.getElementById('fundal');
 const container = document.getElementById('hotspoturi');
+const loading = document.getElementById('incarcare');
+const errorBox = document.getElementById('eroare');
 
-/* poziția unui obiect pe sfera din jurul tău, la un unghi orizontal dat */
 function pozitiePeSfera(unghi, raza, inaltime) {
   const rad = unghi * Math.PI / 180;
-  return {
-    x: (raza * Math.sin(rad)).toFixed(2),
-    y: inaltime,
-    z: (-raza * Math.cos(rad)).toFixed(2),
-    rotY: -unghi,
-  };
+  return { x: (raza * Math.sin(rad)).toFixed(2), y: inaltime,
+    z: (-raza * Math.cos(rad)).toFixed(2), rotY: -unghi };
+}
+
+function textSigur(text) {
+  return String(text).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
 
 function construiesteHotspot(id) {
   container.innerHTML = '';
   const camera = CAMERE[id];
-
-  // panoul cu informații (nu e clickabil)
   const pi = pozitiePeSfera(camera.infoUnghi, 5.2, 2.7);
   const info = document.createElement('a-entity');
-  info.setAttribute('position', pi.x + ' ' + pi.y + ' ' + pi.z);
-  info.setAttribute('rotation', '0 ' + pi.rotY + ' 0');
-  info.innerHTML = '<a-text value="' + camera.info + '" align="center" color="#eef1ff" width="5.5"></a-text>';
+  info.setAttribute('position', `${pi.x} ${pi.y} ${pi.z}`);
+  info.setAttribute('rotation', `0 ${pi.rotY} 0`);
+  info.innerHTML = `<a-text value="${textSigur(camera.info)}" align="center" color="#eef1ff" width="5.5"></a-text>`;
   container.appendChild(info);
 
-  // destinațiile (clickabile: privire 1,5s sau click de mouse)
   for (const leg of camera.legaturi) {
     const p = pozitiePeSfera(leg.unghi, 7, 1.6);
     const el = document.createElement('a-entity');
     el.classList.add('clickable');
-    el.setAttribute('position', p.x + ' ' + p.y + ' ' + p.z);
-    el.setAttribute('rotation', '0 ' + p.rotY + ' 0');
-    el.innerHTML =
-      '<a-ring radius-inner="0.34" radius-outer="0.52" material="color: #22d3a5; shader: flat; side: double; opacity: 0.9"' +
-      '  animation="property: scale; dir: alternate; dur: 1100; loop: true; easing: easeInOutSine; to: 1.15 1.15 1"></a-ring>' +
-      '<a-text value="' + leg.eticheta + '" align="center" position="0 0.95 0" width="4.5" color="#ffffff"></a-text>';
+    el.setAttribute('position', `${p.x} ${p.y} ${p.z}`);
+    el.setAttribute('rotation', `0 ${p.rotY} 0`);
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', leg.eticheta);
+    el.innerHTML = `<a-ring radius-inner="0.34" radius-outer="0.52" material="color: #22d3a5; shader: flat; side: double; opacity: 0.9" animation="property: scale; dir: alternate; dur: 1100; loop: true; easing: easeInOutSine; to: 1.15 1.15 1"></a-ring><a-text value="${textSigur(leg.eticheta)}" align="center" position="0 0.95 0" width="4.5" color="#ffffff"></a-text>`;
     el.addEventListener('click', () => schimbaCamera(leg.id));
     container.appendChild(el);
   }
 }
 
 function schimbaCamera(id) {
-  if (id === cameraCurenta) return;
-  fundal.style.opacity = 1;                    // estompare la negru
+  if (!CAMERE[id] || id === cameraCurenta) return;
+  fundal.style.opacity = 1;
   setTimeout(() => {
     cameraCurenta = id;
-    cer.setAttribute('material', 'src', CAMERE[id].imagine);
+    cer.setAttribute('src', CAMERE[id].imagine);
     titlu.textContent = CAMERE[id].titlu;
     construiesteHotspot(id);
     fundal.style.opacity = 0;
   }, 360);
 }
 
-document.querySelector('a-scene').addEventListener('loaded', () => construiesteHotspot('hol'));
-</script>
+function afiseazaAjutor() {
+  document.getElementById('hint').textContent = 'Privește în jur pentru a explora. Apasă inelele verzi pentru a schimba locul.';
+  clearTimeout(afiseazaAjutor.t);
+  afiseazaAjutor.t = setTimeout(() => {
+    document.getElementById('hint').textContent = '🖥️ trage cu mouse-ul · 📱 mișcă telefonul · 🔵 privește 1,5s pentru a merge';
+  }, 5000);
+}
 
+document.getElementById('buton-ajutor').addEventListener('click', afiseazaAjutor);
+document.getElementById('reincarca').addEventListener('click', () => location.reload());
+document.getElementById('scena').addEventListener('loaded', () => {
+  construiesteHotspot('hol');
+  loading.classList.add('ascuns');
+});
+window.addEventListener('error', (e) => {
+  if (e.target && e.target.tagName === 'IMG') {
+    document.getElementById('mesaj-eroare').textContent = `Nu am găsit imaginea: ${e.target.getAttribute('src')}`;
+    errorBox.classList.remove('ascuns');
+    loading.classList.add('ascuns');
+  }
+}, true);
+</script>
 </body>
 </html>
