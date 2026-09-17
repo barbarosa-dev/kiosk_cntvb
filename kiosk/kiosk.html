@@ -5,57 +5,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kiosk Liceu - Site-ul care te vede</title>
 
-  <!-- MediaPipe / Canvas Tools -->
+  <!-- MediaPipe & Camera Utils -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
   <style>
     :root {
       --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-      --glass-bg: rgba(255, 255, 255, 0.07);
-      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.2);
       --accent: #38bdf8;
-      --accent-hover: #818cf8;
+      --accent-hover: #0284c7;
       --text: #f8fafc;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: var(--bg-gradient); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+    body { background: var(--bg-gradient); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
-    /* Layout Responsive (Adaptive pentru Laptop & Proiector vs Mobil) */
-    header { text-align: center; padding: 1.5rem; background: rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
-    header h1 { font-size: 2rem; color: var(--accent); letter-spacing: 1px; }
+    header { text-align: center; padding: 1.2rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--glass-border); }
+    header h1 { font-size: 1.8rem; color: var(--accent); }
 
+    /* Layout Principal - Structură Orizontală Clară */
     .main-container {
       display: flex;
       flex-direction: row;
       flex: 1;
       padding: 1.5rem;
       gap: 1.5rem;
+      width: 100%;
       max-width: 1400px;
       margin: 0 auto;
-      width: 100%;
     }
 
-    /* Mod mobil: aranjare pe verticală */
-    @media (max-width: 850px) {
+    /* Adaptare mobil */
+    @media (max-width: 900px) {
       .main-container { flex-direction: column; }
     }
 
-    /* Panouri Glassmorphism */
     .panel {
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(10px);
       border-radius: 16px;
       padding: 1.5rem;
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
 
-    .video-panel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-    .content-panel { flex: 1.2; display: flex; flex-direction: column; gap: 1rem; }
+    /* Zona Stânga - Camera Video (45%) */
+    .video-panel {
+      flex: 1;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-    /* Container Video + Canvas Cursor */
+    /* Zona Dreapta - Meniul Lateral (55%) */
+    .menu-panel {
+      flex: 1.2;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
     .canvas-wrapper {
       position: relative;
       width: 100%;
@@ -64,51 +77,61 @@
       border-radius: 12px;
       overflow: hidden;
       border: 2px solid var(--accent);
+      background: #000;
+      margin-top: 1rem;
     }
     video { display: none; }
     canvas { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-    /* Meniu Navigare */
-    .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    /* Butoane Meniu Lateral */
+    .menu-title { font-size: 1.3rem; color: var(--accent); border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; }
+    
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
     .btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--glass-border);
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--accent);
       color: var(--text);
-      padding: 1.2rem;
-      border-radius: 12px;
+      padding: 1rem;
+      border-radius: 10px;
       font-size: 1.1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
       text-decoration: none;
       text-align: center;
+      transition: all 0.2s ease-in-out;
+      display: block;
     }
-    .btn:hover, .btn.active {
+
+    .btn:hover {
       background: var(--accent);
       color: #000;
       box-shadow: 0 0 15px var(--accent);
-      transform: translateY(-2px);
     }
 
-    /* Formular Vizitatori (Sustitut tactil/mouse pentru mediul zgomotos) */
-    .form-group { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+    /* Formular */
+    .form-box { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
     input {
       padding: 0.8rem;
       border-radius: 8px;
       border: 1px solid var(--glass-border);
-      background: rgba(0,0,0,0.3);
+      background: rgba(0,0,0,0.4);
       color: #fff;
-      font-size: 1rem;
+      font-size: 0.95rem;
+      width: 100%;
     }
 
-    .qr-box {
-      margin-top: 1rem;
-      padding: 1rem;
+    .qr-info {
       background: rgba(0,0,0,0.2);
-      border-radius: 8px;
-      text-align: center;
-      font-size: 0.9rem;
       border: 1px dashed var(--accent);
+      padding: 0.8rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      text-align: center;
     }
   </style>
 </head>
@@ -116,14 +139,15 @@
 
   <header>
     <h1>KIOSK INTERACTIV LICEU</h1>
-    <p style="opacity: 0.8;">Sistem Inteligente de Recepție & Tur Virtual</p>
+    <p style="opacity: 0.8;">Site-ul care te vede | Control prin Gesturi</p>
   </header>
 
   <div class="main-container">
-    <!-- Panou Detecție Video & Cursor -->
+    
+    <!-- PANOU STÂNGA: DETECȚIE VIDEO -->
     <div class="panel video-panel">
-      <h3>Control Gesturi</h3>
-      <p style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 0.8rem;">Arată degetul arătător pentru a controla cursorul</p>
+      <h2 class="menu-title">Camera & Cursor</h2>
+      <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">Arată degetul arătător pentru a controla cursorul pe ecran.</p>
       
       <div class="canvas-wrapper">
         <video id="webcam" autoplay playsinline></video>
@@ -131,34 +155,34 @@
       </div>
     </div>
 
-    <!-- Panou Conținut & Formular -->
-    <div class="panel content-panel">
-      <h2>Meniu Principal</h2>
+    <!-- PANOU DREAPTA: MENIU LATERAL -->
+    <div class="panel menu-panel">
+      <h2 class="menu-title">Meniu Navigare</h2>
       
-      <div class="menu-grid">
-        <a href="tur.html" class="btn">🏫 Tur Virtual 360°</a>
-        <a href="../handwave/index.html" class="btn">🎮 Mini-Joc Gesturi</a>
+      <div class="menu-buttons">
+        <a href="tur.html" class="btn">🏫 Deschide Tur Virtual 360°</a>
+        <a href="../handwave/index.html" class="btn">🎮 Mini-Joc Interactiv</a>
       </div>
 
-      <hr style="border-color: var(--glass-border); margin: 1rem 0;">
-
-      <h3>📝 Registru Vizitatori / Biblioteca</h3>
-      <form onsubmit="event.preventDefault(); alert('Date înregistrate cu succes!');">
-        <div class="form-group">
-          <label>Nume și Prenume:</label>
+      <h2 class="menu-title" style="margin-top: 1rem;">📝 Registru Vizitatori / Biblioteca</h2>
+      
+      <form class="form-box" onsubmit="event.preventDefault(); alert('Datele au fost salvate!');">
+        <div>
+          <label style="font-size: 0.85rem;">Nume și Prenume:</label>
           <input type="text" placeholder="Ex: Popescu Ion" required>
         </div>
-        <div class="form-group">
-          <label>Contact (Email/Tel):</label>
+        <div>
+          <label style="font-size: 0.85rem;">Contact (Email / Telefon):</label>
           <input type="text" placeholder="Ex: ion@email.com" required>
         </div>
-        <button type="submit" class="btn" style="margin-top: 1rem; width: 100%;">Trimite Datele</button>
+        <button type="submit" class="btn" style="background: var(--accent); color: #000;">Trimite Datele</button>
       </form>
 
-      <div class="qr-box">
-        📲 <strong>Ești pe telefon în clasă?</strong><br>Scanează codul QR de pe ecran pentru a completa formularul fără zgomot de fundal!
+      <div class="qr-info">
+        📲 <strong>Ești pe telefon?</strong> Scanează codul QR din clasă pentru completare fără zgomot de fundal!
       </div>
     </div>
+
   </div>
 
   <script>
@@ -166,14 +190,13 @@
     const canvasElement = document.getElementById('output_canvas');
     const canvasCtx = canvasElement.getContext('2d');
 
-    // Optimizare viteza detecție (model_complexity: 0 pt telefoane/laptopuri slabe)
     const hands = new Hands({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
     });
     
     hands.setOptions({
       maxNumHands: 1,
-      modelComplexity: 0, // 0 = Rapid (mobil), 1 = Balansat
+      modelComplexity: 0, // Optimizat pentru mobil/laptopuri slabe
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5
     });
@@ -188,15 +211,14 @@
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0];
-        // Punctul 8 = Vârful degetului arătător
-        const indexTip = landmarks[8];
+        const indexTip = landmarks[8]; // Degetul arătător
         
         const x = indexTip.x * canvasElement.width;
         const y = indexTip.y * canvasElement.height;
 
-        // Randare Cursor Vizual BOLD
+        // Randare Cursor Albastru BOLD
         canvasCtx.beginPath();
-        canvasCtx.arc(x, y, 12, 0, 2 * Math.PI);
+        canvasCtx.arc(x, y, 14, 0, 2 * Math.PI);
         canvasCtx.fillStyle = '#38bdf8';
         canvasCtx.fill();
         canvasCtx.lineWidth = 3;
@@ -207,9 +229,7 @@
     });
 
     const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        await hands.send({image: videoElement});
-      },
+      onFrame: async () => { await hands.send({image: videoElement}); },
       width: 480,
       height: 360
     });
