@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080d20">
+  <meta name="description" content="Recepția Digitală a Colegiului Național Tudor Vladimirescu București.">
+  <title>Recepția Digitală — CNTVB</title>
+  <style>
+    :root { --bg:#080d20; --panel:#131b3a; --text:#f1f4ff; --muted:#a5afd2; --mint:#22d3a5; --violet:#7c6cff; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; min-height:100%; }
+    body { color:var(--text); font-family:system-ui,"Segoe UI",sans-serif; background:radial-gradient(900px 500px at 85% -10%,#29326d 0%,transparent 65%),var(--bg); }
+    a { color:inherit; }
+    .wrap { width:min(1120px,calc(100% - 32px)); margin:auto; }
+    header { min-height:72px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:750; letter-spacing:.2px; }
+    .brand-mark { display:grid; place-items:center; width:42px; height:42px; border-radius:13px; background:linear-gradient(135deg,var(--mint),var(--violet)); box-shadow:0 8px 25px #22d3a533; }
+    nav { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    nav a,.button { min-height:42px; padding:10px 15px; border-radius:11px; border:1px solid #ffffff20; text-decoration:none; background:#ffffff0b; cursor:pointer; }
+    nav a:hover,.button:hover { border-color:var(--mint); }
+    main { padding:clamp(42px,9vw,100px) 0 60px; }
+    .hero { display:grid; grid-template-columns:1.15fr .85fr; gap:42px; align-items:center; }
+    .eyebrow { color:var(--mint); font-weight:700; letter-spacing:1.3px; text-transform:uppercase; font-size:13px; }
+    h1 { margin:12px 0 18px; max-width:760px; font-size:clamp(38px,7vw,78px); line-height:1.02; letter-spacing:-2px; }
+    .lead { max-width:650px; color:var(--muted); font-size:clamp(17px,2.3vw,22px); line-height:1.55; }
+    .actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:26px; }
+    .button.primary { color:#062018; font-weight:800; background:linear-gradient(90deg,var(--mint),#53e7bb); border:0; }
+    .button.secondary { background:#7c6cff1c; border-color:#7c6cff88; }
+    .stage { min-height:360px; padding:24px; border:1px solid #ffffff1c; border-radius:28px; background:linear-gradient(145deg,#172350dd,#111631e8); box-shadow:0 25px 70px #0005; position:relative; overflow:hidden; }
+    .stage:after { content:""; position:absolute; width:220px;height:220px;right:-80px;top:-80px;border-radius:50%;background:#22d3a51c; }
+    .screen { position:relative; z-index:1; border:1px solid #ffffff22; border-radius:16px; padding:20px; background:#080d20cc; }
+    .screen-top { display:flex; justify-content:space-between; color:var(--muted); font-size:13px; }
+    .screen h2 { margin:42px 0 10px; font-size:clamp(24px,4vw,40px); }
+    .pulse { display:inline-block; margin-top:20px; padding:12px 18px; border:1px solid #22d3a577; border-radius:999px; color:#a4f7df; background:#22d3a512; }
+    .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:42px; }
+    .card { padding:22px; border:1px solid #ffffff15; border-radius:18px; background:#ffffff08; }
+    .card strong { display:block; margin:10px 0 6px; font-size:18px; }
+    .card p { margin:0; color:var(--muted); line-height:1.5; }
+    .qr { display:flex; align-items:center; gap:16px; margin-top:42px; padding:18px; border:1px solid #ffffff18; border-radius:18px; background:#ffffff08; }
+    .qr img { width:116px; height:116px; padding:8px; border-radius:12px; background:white; }
+    .qr p { margin:5px 0; color:var(--muted); line-height:1.45; }
+    code { color:#c8d0ff; overflow-wrap:anywhere; }
+    footer { padding:20px 0 35px; color:var(--muted); font-size:13px; }
+    @media (max-width:800px) { .hero { grid-template-columns:1fr; } .stage { min-height:290px; } .cards { grid-template-columns:1fr; } header { align-items:flex-start; padding-top:15px; } nav { max-width:55%; } }
+    @media (prefers-reduced-motion:reduce) { *,*:before,*:after { animation:none!important; transition:none!important; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><span class="brand-mark">🏫</span><span>Recepția Digitală<br><small>C.N. „Tudor Vladimirescu”</small></span></div>
+      <nav aria-label="Navigare principală"><a href="kiosk.html">Kiosk</a><a href="tur.html">Tur virtual</a></nav>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="titlu">
+        <div>
+          <div class="eyebrow">Descoperă liceul într-un mod nou</div>
+          <h1 id="titlu">O recepție digitală pentru o școală modernă.</h1>
+          <p class="lead">Explorează informațiile despre colegiu, navighează prin gesturi și intră într-un tur virtual al spațiilor liceului — de pe laptop, proiector sau telefon.</p>
+          <div class="actions"><a class="button primary" href="kiosk.html">▶ Pornește experiența</a><a class="button secondary" href="tur.html">🕶️ Intră în turul 360°</a></div>
+        </div>
+        <div class="stage" aria-label="Previzualizare kiosk">
+          <div class="screen"><div class="screen-top"><span>RECΕPȚIA DIGITALĂ</span><span>ONLINE</span></div><h2>Bun venit! 👋</h2><div>Cu ce te pot ajuta astăzi?</div><span class="pulse">Ridică mâna sau atinge ecranul</span></div>
+        </div>
+      </section>
+      <section class="cards" aria-label="Funcționalități">
+        <article class="card"><span aria-hidden="true">🖐️</span><strong>Interacțiune naturală</strong><p>Camera poate detecta mâna local, iar mouse-ul rămâne fallback-ul sigur pentru orice laptop.</p></article>
+        <article class="card"><span aria-hidden="true">🧺</span><strong>Învățare prin joc</strong><p>Un joc scurt transformă așteptarea într-o experiență memorabilă și interactivă.</p></article>
+        <article class="card"><span aria-hidden="true">🌐</span><strong>Tur pe telefon</strong><p>Scanezi codul QR și explorezi turul virtual în modul „magic window”, fără cască.</p></article>
+      </section>
+      <section class="qr" aria-labelledby="qr-titlu">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Fbarbarosa-dev.github.io%2Fkiosk_cntvb%2Ftur.html" alt="Cod QR către turul virtual">
+        <div><h2 id="qr-titlu">Ia turul cu tine</h2><p>Scanează codul QR cu telefonul și deschide turul virtual al liceului.</p><p><code>barbarosa-dev.github.io/kiosk_cntvb/tur.html</code></p></div>
+      </section>
+    </main>
+    <footer>Proiect educațional — imaginile demo vor fi înlocuite treptat cu fotografii reale ale liceului.</footer>
+  </div>
+</body>
+</html>
