@@ -1,189 +1,28 @@
 <!doctype html>
 <html lang="ro">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#080d20">
-  <title>HandWave — De la site la recepție digitală</title>
-  <style>
-    :root{--bg:#080d20;--panel:#131b3a;--panel2:#1b2752;--text:#f1f4ff;--muted:#a5afd2;--mint:#22d3a5;--violet:#7c6cff;--line:#ffffff22;--shadow:0 24px 80px #0006}
-    *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:system-ui,"Segoe UI",sans-serif}
-    body{overflow:hidden;background:radial-gradient(1000px 600px at 85% -10%,#29366d 0%,transparent 65%),var(--bg)}
-    button,a{font:inherit;color:inherit}
-    .deck{height:100vh;position:relative}
-    .slide{position:absolute;inset:0;display:none;overflow:auto;padding:clamp(28px,6vw,82px) clamp(24px,8vw,120px)}
-    .slide.active{display:flex;flex-direction:column;justify-content:center;animation:appear .35s ease-out}
-    @keyframes appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-    .topline{position:absolute;top:24px;left:clamp(24px,8vw,120px);right:clamp(24px,8vw,120px);display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
-    .brand{color:var(--text);font-weight:800;letter-spacing:.02em;text-transform:none;font-size:16px}
-    .brand-mark{display:inline-grid;place-items:center;width:30px;height:30px;margin-right:8px;border-radius:9px;background:linear-gradient(135deg,var(--mint),var(--violet))}
-    .eyebrow{color:var(--mint);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:clamp(12px,1.4vw,15px)}
-    h1{max-width:950px;margin:16px 0 20px;font-size:clamp(52px,9vw,124px);line-height:.94;letter-spacing:-.06em}
-    h2{margin:12px 0 18px;font-size:clamp(34px,5vw,70px);line-height:1.02;letter-spacing:-.04em}
-    h3{margin:0 0 8px;font-size:clamp(20px,2.4vw,30px)}
-    p{color:var(--muted);font-size:clamp(17px,2vw,24px);line-height:1.5;max-width:850px}
-    .subtitle{font-size:clamp(20px,3vw,34px);color:var(--text);max-width:900px}
-    .meta{margin-top:28px;color:var(--muted);font-size:16px}
-    .accent{color:var(--mint)}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:24px;max-width:1100px}
-    .grid.two{grid-template-columns:repeat(2,1fr)}
-    .card{padding:25px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#172350cc,#111631dd);box-shadow:0 14px 40px #0003}
-    .card .icon{font-size:36px;display:block;margin-bottom:18px}
-    .card p{font-size:16px;margin:0}
-    .flow{display:flex;align-items:stretch;gap:10px;max-width:1120px;margin-top:28px;flex-wrap:wrap}
-    .step{flex:1;min-width:150px;padding:20px;border:1px solid var(--line);border-radius:18px;background:#ffffff09}
-    .step strong{display:block;color:var(--mint);font-size:14px;margin-bottom:8px}
-    .step span{font-size:18px;font-weight:700}
-    .demo{display:grid;grid-template-columns:1.05fr .95fr;gap:32px;align-items:center}
-    .screen{min-height:320px;padding:28px;border:1px solid #ffffff24;border-radius:26px;background:linear-gradient(145deg,#172350,#10152f);box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:center}
-    .screen-top{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.1em}
-    .screen h3{margin-top:62px;font-size:clamp(28px,4vw,52px)}
-    .pill{display:inline-block;width:max-content;margin-top:18px;padding:10px 16px;border:1px solid #22d3a577;border-radius:999px;color:#a4f7df;background:#22d3a512}
-    .code{padding:22px;border-radius:18px;background:#050816;border:1px solid var(--line);font-family:ui-monospace,SFMono-Regular,monospace;color:#c8d0ff;font-size:clamp(14px,1.5vw,18px);line-height:1.7;white-space:pre-wrap}
-    .code .green{color:var(--mint)}.code .purple{color:#b5aaff}
-    .quote{max-width:980px;margin:20px 0;padding:28px 32px;border-left:4px solid var(--mint);background:#ffffff08;border-radius:0 18px 18px 0;font-size:clamp(22px,3vw,38px);line-height:1.3}
-    .controls{position:fixed;z-index:10;bottom:22px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#0b1028dd;backdrop-filter:blur(12px)}
-    .controls button{width:38px;height:38px;border:1px solid var(--line);border-radius:50%;background:#ffffff0c;cursor:pointer}.controls button:hover{border-color:var(--mint);color:var(--mint)}
-    #counter{min-width:52px;text-align:center;color:var(--muted);font-size:14px}
-    .hint{position:fixed;right:24px;bottom:30px;color:#7782aa;font-size:12px}
-    .qr-note{padding:22px;border:1px solid #ffffff18;border-radius:18px;background:#ffffff08;max-width:650px}.qr-note code{color:#c8d0ff;overflow-wrap:anywhere}
-    @media(max-width:800px){.grid,.grid.two,.demo{grid-template-columns:1fr}.slide{padding:70px 24px 80px}.topline{left:24px;right:24px}.hint{display:none}.flow{gap:8px}.step{min-width:130px}.screen{min-height:240px}}
-    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HandWave — prezentare</title>
+<style>
+:root{--bg:#080d20;--text:#f1f4ff;--muted:#a5afd2;--mint:#22d3a5;--violet:#7c6cff;--line:#ffffff22}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,"Segoe UI",sans-serif}body{overflow:hidden;background:radial-gradient(1000px 600px at 85% -10%,#29366d 0,transparent 65%),var(--bg)}
+.deck{height:100vh}.slide{display:none;height:100vh;overflow:auto;padding:8vh 10vw 10vh}.slide.active{display:flex;flex-direction:column;justify-content:center;animation:in .35s ease-out}@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.top{position:absolute;top:24px;left:10vw;right:10vw;display:flex;justify-content:space-between;color:var(--muted);font-size:13px}.brand{font-weight:800;color:var(--text)}.eyebrow{color:var(--mint);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:14px}h1{font-size:clamp(58px,10vw,130px);line-height:.9;margin:18px 0;letter-spacing:-.06em}h2{font-size:clamp(34px,5vw,70px);line-height:1.04;margin:14px 0 22px;letter-spacing:-.04em}h3{font-size:25px;margin:0 0 9px}p{max-width:900px;color:var(--muted);font-size:clamp(17px,2vw,23px);line-height:1.5}.accent{color:var(--mint)}.subtitle{font-size:clamp(20px,3vw,34px);max-width:950px}.small{font-size:16px;color:var(--muted);margin-top:25px}.quote{max-width:950px;margin-top:18px;padding:25px 30px;border-left:4px solid var(--mint);background:#ffffff09;border-radius:0 18px 18px 0;font-size:clamp(22px,3vw,38px);line-height:1.3}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px}.grid.two{grid-template-columns:repeat(2,1fr)}.card{padding:24px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,#172350cc,#111631dd)}.card .icon{font-size:35px;display:block;margin-bottom:13px}.card p{font-size:16px;margin:0}.flow{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.step{flex:1;min-width:145px;padding:18px;border:1px solid var(--line);border-radius:16px;background:#ffffff09}.step b{display:block;color:var(--mint);font-size:13px;margin-bottom:7px}.step span{font-weight:700;font-size:17px}.demo{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center}.screen{min-height:260px;padding:25px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,#172350,#10152f);display:flex;flex-direction:column;justify-content:center}.screen small{color:var(--muted);text-transform:uppercase;letter-spacing:.1em}.screen strong{font-size:clamp(28px,4vw,50px);margin-top:40px}.pill{width:max-content;margin-top:17px;padding:10px 15px;border:1px solid #22d3a577;border-radius:999px;color:#a4f7df}.controls{position:fixed;z-index:4;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#0b1028dd}.controls button{width:38px;height:38px;border:1px solid var(--line);border-radius:50%;background:#ffffff0d;color:var(--text);cursor:pointer}.controls button:hover{border-color:var(--mint);color:var(--mint)}#counter{min-width:50px;text-align:center;color:var(--muted);font-size:14px}.hint{position:fixed;right:22px;bottom:29px;color:#7782aa;font-size:12px}
+@media(max-width:800px){.slide{padding:75px 24px 90px}.top{left:24px;right:24px}.grid,.grid.two,.demo{grid-template-columns:1fr}.hint{display:none}}
+</style>
 </head>
 <body>
-  <main class="deck" aria-live="polite">
-    <section class="slide active">
-      <div class="topline"><span class="brand"><span class="brand-mark">🖐️</span>HandWave</span><span>01 / 08</span></div>
-      <div class="eyebrow">Proiect de informatică</div>
-      <h1>Hand<span class="accent">Wave</span></h1>
-      <div class="subtitle">De la site la recepție digitală — kiosk interactiv pentru C.N. „Tudor Vladimirescu” București</div>
-      <div class="meta">navigare prin gesturi · joc educațional · tur virtual 360°</div>
-    </section>
-
-    <section class="slide">
-      <div class="topline"><span class="brand">HandWave</span><span>02 / 08</span></div>
-      <div class="eyebrow">Punctul de plecare</div>
-      <h2>Cum transformăm un site într-o experiență?</h2>
-      <p>Un vizitator care intră într-o școală are nevoie de orientare, informații și un motiv să-și amintească locul. Un site clasic oferă conținut, dar nu oferă aceeași experiență ca o recepție interactivă.</p>
-      <div class="quote">„Nu am construit doar un site despre liceu. Am construit un prim contact digital cu liceul.”</div>
-    </section>
-
-    <section class="slide">
-      <div class="topline"><span class="brand">HandWave</span><span>03 / 08</span></div>
-      <div class="eyebrow">Soluția</div>
-      <h2>O recepție digitală pentru o școală modernă</h2>
-      <div class="grid">
-        <article class="card"><span class="icon">🖐️</span><h3>Interacțiune naturală</h3><p>Camera poate detecta mâna, iar degetul arătător devine cursor. Mouse-ul rămâne un fallback sigur.</p></article>
-        <article class="card"><span class="icon">🧺</span><h3>Învățare prin joc</h3><p>Un joc scurt transformă timpul de așteptare într-o experiență memorabilă și interactivă.</p></article>
-        <article class="card"><span class="icon">🌐</span><h3>Tur pe orice dispozitiv</h3><p>Turul 360° poate fi explorat pe ecran, laptop sau telefon, fără instalarea unei aplicații.</p></article>
-      </div>
-    </section>
-
-    <section class="slide">
-      <div class="topline"><span class="brand">HandWave</span><span>04 / 08</span></div>
-      <div class="eyebrow">Experiența vizitatorului</div>
-      <h2>De la „Bun venit!” la explorare</h2>
-      <div class="flow">
-        <div class="step"><strong>01</strong><span>Ecran de așteptare</span></div>
-        <div class="step"><strong>02</strong><span>Gest sau click</span></div>
-        <div class="step"><strong>03</strong><span>Meniu interactiv</span></div>
-        <div class="step"><strong>04</strong><span>Informații și joc</span></div>
-        <div class="step"><strong>05</strong><span>Tur virtual</span></div>
-      </div>
-      <div class="demo" style="margin-top:36px">
-        <div class="screen"><div class="screen-top"><span>Recepția digitală</span><span>ONLINE</span></div><h3>Bun venit! 👋</h3><span class="pill">🖐️ Ridică mâna pentru a începe</span></div>
-        <p>Prezentarea live pornește de aici: activez meniul, deschid o pagină, arăt controlul prin gesturi și apoi trec în turul 360°.</p>
-      </div>
-    </section>
-
-    <section class="slide">
-      <div class="topline"><span class="brand">HandWave</span><span>05 / 08</span></div>
-      <div class="eyebrow">Tehnologia din spatele gesturilor</div>
-      <h2>Interacțiune direct în browser</h2>
-      <div class="demo">
-        <div>
-          <p>MediaPipe identifică punctele mâinii. Arătătorul este urmărit ca un cursor, iar gesturile pot activa elementele interfeței.</p>
-          <p>Aplicația revine automat la mouse dacă nu există cameră, permisiuni sau conexiune suficientă.</p>
-        </div>
-        <div class="code"><span class="purple">const</span> Kiosk = {
-  <span class="green">mana</span>(points) {
-    setMode('mana');
-    cursor.move(points[8]);
-    detectClick(points);
-  }
-};</div>
-      </div>
-    </section>
-
-    <section class="slide">
-      <div class="topline"><span class="brand">HandWave</span><span>06 / 08</span></div>
-      <div class="eyebrow">Turul virtual</div>
-      <h2>Școala devine explorabilă la 360°</h2>
-      <p>Turul folosește panorame equirectangulare și hotspot-uri care leagă spațiile între ele.</p>
-      <div class="grid two">
-        <article class="card"><span class="icon">🏫</span><h3>Patru spații</h3><p>Holul colegiului, laboratorul de informatică, biblioteca și curtea pot fi explorate ca o rețea de încăperi.</p></article>
-        <article class="card"><span class="icon">📱</span><h3>Un singur cod QR</h3><p>Vizitatorul continuă experiența pe telefon: trage cu degetul, mișcă telefonul sau privește un hotspot.</p></article>
-      </div>
-      <div class="qr-note" style="margin-top:22px">Demo live: <code>barbarosa-dev.github.io/kiosk_cntvb/tur.html</code></div>
-    </section>
-
-    <section class="slide">
-      <div class="topline"><span class="brand">HandWave</span><span>07 / 08</span></div>
-      <div class="eyebrow">Ce am folosit și ce am învățat</div>
-      <h2>Un proiect web complet, nu doar o pagină</h2>
-      <div class="grid two">
-        <article class="card"><h3>Tehnologii</h3><p><strong>HTML, CSS, JavaScript</strong> pentru interfață și logică · <strong>MediaPipe</strong> pentru mână · <strong>A-Frame</strong> pentru scena 360° · <strong>GitHub Pages</strong> pentru publicare.</p></article>
-        <article class="card"><h3>Decizii importante</h3><p>Fallback la mouse, design responsive, suport pentru tastatură, reducerea animațiilor și folosirea locală a camerei fără salvarea cadrelor video.</p></article>
-      </div>
-      <div class="flow"><div class="step"><strong>v1</strong><span>site clasic</span></div><div class="step"><strong>v2</strong><span>HandWave + joc</span></div><div class="step"><strong>v3</strong><span>kiosk cu gesturi</span></div><div class="step"><strong>v4</strong><span>tur 360° + QR</span></div></div>
-    </section>
-
-    <section class="slide">
-      <div class="topline"><span class="brand">HandWave</span><span>08 / 08</span></div>
-      <div class="eyebrow">Concluzie</div>
-      <h2>Un prim contact digital cu liceul</h2>
-      <p>HandWave poate fi folosit la recepție, la porți deschise, la evenimente sau pe un proiector. Imaginile demo pot fi înlocuite cu fotografii reale, iar proiectul poate deveni un kiosk permanent.</p>
-      <div class="quote">„Vizitatorul nu doar citește despre școală. Interacționează cu ea, se joacă, explorează și pleacă mai curios.”</div>
-      <div class="meta accent">Mulțumesc! Întrebări?</div>
-    </section>
-  </main>
-
-  <div class="controls" aria-label="Controale prezentare">
-    <button id="prev" aria-label="Slide anterior">←</button>
-    <span id="counter">1 / 8</span>
-    <button id="next" aria-label="Slide următor">→</button>
-    <button id="full" aria-label="Ecran complet">⛶</button>
-  </div>
-  <div class="hint">← → navigare · F ecran complet · Esc ieșire</div>
-
-  <script>
-    'use strict';
-    const slides=[...document.querySelectorAll('.slide')];
-    const counter=document.getElementById('counter');
-    let current=0;
-    function show(index){
-      current=(index+slides.length)%slides.length;
-      slides.forEach((slide,i)=>slide.classList.toggle('active',i===current));
-      counter.textContent=`${current+1} / ${slides.length}`;
-    }
-    document.getElementById('prev').addEventListener('click',()=>show(current-1));
-    document.getElementById('next').addEventListener('click',()=>show(current+1));
-    document.getElementById('full').addEventListener('click',()=>{
-      if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
-      else document.exitFullscreen?.();
-    });
-    document.addEventListener('keydown',event=>{
-      if(['ArrowRight','PageDown',' '].includes(event.key)){event.preventDefault();show(current+1)}
-      if(['ArrowLeft','PageUp'].includes(event.key)){event.preventDefault();show(current-1)}
-      if(event.key.toLowerCase()==='f') document.getElementById('full').click();
-      if(event.key==='Home') show(0);
-      if(event.key==='End') show(slides.length-1);
-    });
-    let startX=0;
-    document.addEventListener('touchstart',event=>{startX=event.changedTouches[0].clientX},{passive:true});
-    document.addEventListener('touchend',event=>{const distance=event.changedTouches[0].clientX-startX;if(Math.abs(distance)>50)show(current+(distance<0?1:-1))},{passive:true});
-  </script>
+<main class="deck">
+<section class="slide active"><div class="top"><span class="brand">🖐️ HandWave</span><span>01 / 07</span></div><div class="eyebrow">Proiect de informatică</div><h1>Hand<span class="accent">Wave</span></h1><div class="subtitle">De la site la recepție digitală — experiență interactivă pentru C.N. „Tudor Vladimirescu” București</div><div class="small">navigare prin gesturi · joc educațional · tur virtual 360°</div></section>
+<section class="slide"><div class="top"><span class="brand">HandWave</span><span>02 / 07</span></div><div class="eyebrow">Punctul de plecare</div><h2>Cum transformăm un site într-o experiență?</h2><p>Un vizitator are nevoie de orientare, informații și un motiv să-și amintească locul. Un site clasic oferă conținut, dar nu întotdeauna oferă o experiență.</p><div class="quote">„Nu am construit doar un site despre liceu. Am construit un prim contact digital cu liceul.”</div></section>
+<section class="slide"><div class="top"><span class="brand">HandWave</span><span>03 / 07</span></div><div class="eyebrow">Soluția</div><h2>O recepție digitală pentru o școală modernă</h2><div class="grid"><article class="card"><span class="icon">🖐️</span><h3>Interacțiune naturală</h3><p>Camera poate detecta mâna, iar mouse-ul rămâne un fallback sigur.</p></article><article class="card"><span class="icon">🧺</span><h3>Învățare prin joc</h3><p>Un joc scurt face așteptarea mai plăcută și mai memorabilă.</p></article><article class="card"><span class="icon">🌐</span><h3>Tur pe orice dispozitiv</h3><p>Experiența continuă pe ecran, laptop sau telefon.</p></article></div></section>
+<section class="slide"><div class="top"><span class="brand">HandWave</span><span>04 / 07</span></div><div class="eyebrow">Experiența vizitatorului</div><h2>De la „Bun venit!” la explorare</h2><div class="flow"><div class="step"><b>01</b><span>Ecran de așteptare</span></div><div class="step"><b>02</b><span>Gest sau click</span></div><div class="step"><b>03</b><span>Meniu interactiv</span></div><div class="step"><b>04</b><span>Informații și joc</span></div><div class="step"><b>05</b><span>Tur virtual</span></div></div><div class="demo" style="margin-top:28px"><div class="screen"><small>Recepția digitală · online</small><strong>Bun venit! 👋</strong><span class="pill">🖐️ Ridică mâna pentru a începe</span></div><p>Aici se potrivește demonstrația live: activați meniul, arătați o pagină, jocul și apoi turul 360°.</p></div></section>
+<section class="slide"><div class="top"><span class="brand">HandWave</span><span>05 / 07</span></div><div class="eyebrow">Dincolo de demonstrație</div><h2>Unde poate fi folosit?</h2><div class="grid two"><article class="card"><span class="icon">🏫</span><h3>În școală</h3><p>La recepție, în hol, la porți deschise, în săptămâna altfel sau la întâlniri cu părinții.</p></article><article class="card"><span class="icon">🎪</span><h3>La evenimente</h3><p>La târguri educaționale, expoziții, concursuri și prezentări unde prima impresie contează.</p></article><article class="card"><span class="icon">📱</span><h3>De la distanță</h3><p>Turul virtual și codul QR permit explorarea liceului de acasă sau de pe telefon.</p></article><article class="card"><span class="icon">🔁</span><h3>Reutilizabil</h3><p>Structura poate fi adaptată pentru alte școli, muzee, biblioteci sau centre educaționale.</p></article></div></section>
+<section class="slide"><div class="top"><span class="brand">HandWave</span><span>06 / 07</span></div><div class="eyebrow">Dezvoltări ulterioare</div><h2>Ce am putea adăuga în continuare?</h2><div class="grid two"><article class="card"><h3>Fotografii reale</h3><p>Înlocuirea panoramelor demo cu imagini reale ale holului, laboratorului, bibliotecii și curții.</p></article><article class="card"><h3>Mai mult conținut</h3><p>Programul liceului, evenimente, cluburi, proiecte, rezultate și un formular de contact.</p></article><article class="card"><h3>Personalizare</h3><p>Identitate vizuală a liceului, mai multe limbi și un mod special pentru evenimente.</p></article><article class="card"><h3>Kiosk permanent</h3><p>Instalare pe un ecran tactil sau proiector, cu actualizare simplă și utilizare zilnică.</p></article></div></section>
+<section class="slide"><div class="top"><span class="brand">HandWave</span><span>07 / 07</span></div><div class="eyebrow">Concluzie</div><h2>Un prim contact digital cu liceul</h2><p>HandWave poate transforma recepția liceului într-un loc modern, prietenos și memorabil. Nu este doar o pagină web, ci o experiență care poate crește împreună cu școala.</p><div class="quote">„Vizitatorul nu doar citește despre școală. Interacționează cu ea, se joacă, explorează și pleacă mai curios.”</div><div class="small accent">Mulțumim! Întrebări?</div></section>
+</main>
+<div class="controls"><button id="prev" aria-label="Anterior">←</button><span id="counter">1 / 7</span><button id="next" aria-label="Următor">→</button><button id="full" aria-label="Ecran complet">⛶</button></div><div class="hint">← → navigare · F fullscreen · Esc ieșire</div>
+<script>'use strict';const slides=[...document.querySelectorAll('.slide')],counter=document.getElementById('counter');let current=0;function show(i){current=(i+slides.length)%slides.length;slides.forEach((s,n)=>s.classList.toggle('active',n===current));counter.textContent=`${current+1} / ${slides.length}`}document.getElementById('prev').onclick=()=>show(current-1);document.getElementById('next').onclick=()=>show(current+1);document.getElementById('full').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();document.addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();show(current+1)}if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();show(current-1)}if(e.key.toLowerCase()==='f')document.getElementById('full').click();if(e.key==='Home')show(0);if(e.key==='End')show(slides.length-1)});</script>
 </body>
 </html>
